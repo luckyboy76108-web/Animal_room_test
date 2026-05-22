@@ -1,690 +1,1347 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html>
+<!DOCTYPE html>
+
+<html lang="ko">
+
 <head>
-  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-  <meta http-equiv="Content-Style-Type" content="text/css">
-  <title></title>
-  <meta name="Generator" content="Cocoa HTML Writer">
-  <meta name="CocoaVersion" content="2685.4">
-  <style type="text/css">
-    p.p1 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica}
-    p.p2 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica; min-height: 14.0px}
-  </style>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Smart Rack OS v8.0 - Absolute Precision Pro</title>
+
+    <style>
+
+        /* --- 1. Apple 프리미엄 테크 UI 테마 정의 (글래스모피즘) --- */
+
+        :root {
+
+            --breeding-color: #ffffff;
+
+            --mating-color: #ffd60a;
+
+            --glass-panel: rgba(255, 255, 255, 0.05);
+
+            --glass-border: rgba(255, 255, 255, 0.12);
+
+            --slot-bg: rgba(255, 255, 255, 0.02);
+
+            --slot-border: rgba(255, 255, 255, 0.15);
+
+            --text-main: #ffffff;
+
+            --text-sub: #8e8e93;
+
+        }
+
+
+
+        body {
+
+            margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+
+            background: radial-gradient(circle at 50% 30%, #1e1e2f, #000000 85%);
+
+            color: var(--text-main); height: 100vh; display: flex; flex-direction: column; overflow: hidden;
+
+            -webkit-user-select: none; user-select: none;
+
+        }
+
+
+
+        header {
+
+            padding: 15px 30px; display: flex; justify-content: space-between; align-items: center;
+
+            border-bottom: 1px solid var(--glass-border); background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(40px);
+
+            box-sizing: border-box; height: 65px;
+
+        }
+
+        header h1 { margin: 0; font-size: 24px; font-weight: 700; background: linear-gradient(90deg, #fff, #a1a1a6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+        
+
+        .top-right { display: flex; align-items: center; gap: 20px; }
+
+        .progress-container { width: 180px; background: rgba(255,255,255,0.1); height: 10px; border-radius: 5px; overflow: hidden; }
+
+        .progress-bar { height: 100%; background: linear-gradient(90deg, #ff9500, #ffcc00); width: 0%; transition: width 0.3s; }
+
+        .progress-text { font-size: 13px; color: var(--text-sub); font-weight: 600; }
+
+        
+
+        .header-btn { background: rgba(255,255,255,0.08); border: 1px solid var(--glass-border); color: white; padding: 8px 16px; border-radius: 10px; cursor: pointer; font-weight: 600; transition: 0.2s; }
+
+        .header-btn:hover { background: rgba(255,255,255,0.15); }
+
+
+
+        /* --- 2. 메인 워크스페이스 구조 --- */
+
+        .workspace { flex: 1; display: flex; overflow: hidden; }
+
+
+
+        /* 왼쪽 사이드바: 랙 구성 및 공간 도면 내비게이터 */
+
+        .map-nav {
+
+            width: 300px; border-right: 1px solid var(--glass-border); padding: 25px 20px;
+
+            display: flex; flex-direction: column; gap: 20px; background: rgba(0,0,0,0.3); overflow-y: auto;
+
+        }
+
+        .section-title { font-size: 13px; color: var(--text-sub); font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
+
+        
+
+        .config-box { background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); border-radius: 16px; padding: 15px; }
+
+        .config-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 14px; }
+
+        .config-row:last-child { margin-bottom: 0; }
+
+        .config-input { width: 50px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.2); color: white; padding: 4px; border-radius: 6px; text-align: center; }
+
+
+
+        /* 🗺️ 동물실 실제 배치 도면 (Dropzone 역할 통합) */
+
+        .room-map {
+
+            position: relative; width: 100%; height: 290px; background: rgba(0,0,0,0.2);
+
+            border: 1px solid var(--glass-border); border-radius: 24px; box-sizing: border-box;
+
+        }
+
+        
+
+        .map-rack {
+
+            position: absolute; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.15);
+
+            border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+
+            font-weight: 700; font-size: 14px; cursor: pointer; transition: all 0.2s; position: relative;
+
+        }
+
+        .map-rack.active { border-color: #ffcc00; background: rgba(255, 204, 0, 0.08); }
+
+        .map-rack h3 { margin: 0 0 5px 0; font-size: 16px; font-weight: 600; }
+
+        .map-rack p { margin: 0; font-size: 12px; color: var(--text-sub); }
+
+        .map-rack.drag-over { background: rgba(52, 199, 89, 0.15); border-color: #34c759; transform: scale(1.03); }
+
+
+
+        /* 사용자 제공 도면 기반 정밀 배치 좌표 */
+
+        .rack-A { top: 15px; left: 15px; width: 50px; height: 110px; }
+
+        .rack-C { top: 140px; left: 15px; width: 50px; height: 130px; }
+
+        .rack-B { top: 15px; right: 15px; width: 50px; height: 110px; }
+
+        .rack-D { bottom: 65px; left: 85px; width: 200px; height: 32px; }
+
+        .rack-E { bottom: 15px; left: 85px; width: 200px; height: 32px; }
+
+        .change-station {
+
+            position: absolute; top: 140px; right: 15px; width: 100px; height: 85px;
+
+            border: 1px dashed rgba(255,255,255,0.12); background: rgba(255,255,255,0.01);
+
+            border-radius: 14px; display: flex; align-items: center; justify-content: center;
+
+            font-size: 12px; color: var(--text-sub); text-align: center; line-height: 1.4; font-weight: 600;
+
+        }
+
+
+
+        /* 오른쪽: 메인 격자 보드 */
+
+        .board-pane { flex: 1; padding: 30px; display: flex; flex-direction: column; justify-content: flex-start; align-items: flex-start; overflow: auto; box-sizing: border-box; }
+
+        .board-header { margin-bottom: 20px; }
+
+        .board-title { font-size: 26px; font-weight: 700; margin: 0; }
+
+        .board-desc { font-size: 13px; color: var(--text-sub); margin-top: 4px; }
+
+
+
+        .grid-container {
+
+            background: var(--glass-panel); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
+
+            border: 1px solid var(--glass-border); border-radius: 32px; padding: 25px;
+
+            box-shadow: 0 30px 60px rgba(0,0,0,0.5); position: relative; width: fit-content;
+
+        }
+
+        .grid-7 { display: grid; grid-template-columns: repeat(7, 92px); gap: 14px; position: relative; }
+
+
+
+        /* --- 3. 정밀 정렬 슬롯 및 프리미엄 그라데이션 케이지 객체 --- */
+
+        .slot {
+
+            width: 92px; height: 92px; border-radius: 24px; background: var(--slot-bg);
+
+            border: 1px dashed var(--slot-border); position: relative;
+
+            display: flex; align-items: center; justify-content: center; box-sizing: border-box;
+
+        }
+
+        .slot::before { content: attr(data-label); font-size: 11px; color: rgba(255,255,255,0.1); font-weight: 600; }
+
+        .slot.ghost-slot { border-color: rgba(255, 55, 95, 0.35); background: rgba(255, 55, 95, 0.02); }
+
+
+
+        .cage {
+
+            width: 92px; height: 92px; border-radius: 24px; position: absolute;
+
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+
+            font-weight: bold; box-shadow: 0 8px 20px rgba(0,0,0,0.3); box-sizing: border-box;
+
+            cursor: grab; touch-action: none; z-index: 10;
+
+        }
+
+        /* 연구원님 요구 그라데이션 광택 이펙트 주입 */
+
+        .cage.breeding { 
+
+            background: var(--breeding-bg); color: #1c1c1e; border: 1px solid rgba(255,255,255,0.8);
+
+            box-shadow: 0 5px 15px rgba(255,255,255,0.1), 0 8px 20px rgba(0,0,0,0.3);
+
+        }
+
+        .cage.mating { 
+
+            background: var(--mating-bg); color: #1c1c1e; border: 1px solid rgba(255,225,0,0.7);
+
+            box-shadow: 0 5px 15px rgba(255,214,10,0.15), 0 8px 20px rgba(0,0,0,0.3);
+
+        }
+
+        
+
+        /* ⭐️ [이격 버그 원천 차단] 1:1 정밀 포인터 고정 트래킹 엔진 전용 스타일 */
+
+        .cage.floating {
+
+            cursor: grabbing; z-index: 9999 !important;
+
+            transform: scale(1.1) translateY(-4px);
+
+            box-shadow: 0 25px 45px rgba(0,0,0,0.6);
+
+            pointer-events: none;
+
+            position: fixed !important;
+
+            left: 0; top: 0; margin: 0 !important;
+
+        }
+
+
+
+        .strain-code { font-size: 30px; font-weight: 800; line-height: 1; letter-spacing: -0.5px; }
+
+        .sub-id { font-size: 12px; font-weight: 700; margin-top: 5px; background: rgba(0,0,0,0.06); padding: 1px 6px; border-radius: 6px; }
+
+
+
+        /* --- 4. 오버레이 우측 판넬 (외부 클릭 자동 닫기) --- */
+
+        .side-panel {
+
+            position: fixed; top: 0; right: -360px; width: 330px; height: 100vh;
+
+            background: rgba(25, 25, 30, 0.85); backdrop-filter: blur(40px); border-left: 1px solid var(--glass-border);
+
+            z-index: 1500; padding: 40px 25px; box-shadow: -20px 0 40px rgba(0,0,0,0.5);
+
+            transition: right 0.3s cubic-bezier(0.16, 1, 0.3, 1); box-sizing: border-box;
+
+        }
+
+        .side-panel.open { right: 0; }
+
+        .side-panel h2 { font-size: 22px; margin-top: 0; margin-bottom: 25px; }
+
+        
+
+        .match-row { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+
+        .match-key { width: 40px; text-align: center; font-weight: bold; font-size: 16px; color: #ffcc00; }
+
+        .match-val { flex: 1; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.15); color: white; padding: 8px; border-radius: 8px; }
+
+
+
+        /* --- 5. 정보 수정 모달 창 --- */
+
+        .modal-overlay {
+
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+
+            background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); z-index: 2000;
+
+            display: none; justify-content: center; align-items: center;
+
+        }
+
+        .modal {
+
+            background: rgba(28, 28, 35, 0.95); border: 1px solid var(--glass-border); border-radius: 28px;
+
+            width: 440px; padding: 35px; box-shadow: 0 40px 80px rgba(0,0,0,0.6); box-sizing: border-box;
+
+        }
+
+        .modal h2 { margin-top: 0; margin-bottom: 20px; font-size: 22px; font-weight: 700; }
+
+        .form-group { margin-bottom: 14px; }
+
+        .form-group label { display: block; font-size: 12px; color: var(--text-sub); margin-bottom: 5px; font-weight: 600; }
+
+        .form-control {
+
+            width: 100%; padding: 10px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.15);
+
+            background: rgba(0,0,0,0.3); color: white; font-size: 14px; box-sizing: border-box;
+
+        }
+
+        .form-row { display: flex; gap: 10px; }
+
+        .modal-btns { display: flex; justify-content: flex-end; gap: 12px; margin-top: 25px; }
+
+        .btn { padding: 12px 18px; border-radius: 12px; border: none; font-weight: 600; cursor: pointer; font-size: 14px; }
+
+        .btn-cancel { background: rgba(255,255,255,0.1); color: white; }
+
+        .btn-save { background: #ffcc00; color: #1c1c1e; }
+
+        .btn-delete { background: #FF375F; color: white; margin-right: auto; }
+
+    </style>
+
 </head>
+
 <body>
-<p class="p1">&lt;!DOCTYPE html&gt;</p>
-<p class="p1">&lt;html lang="ko"&gt;</p>
-<p class="p1">&lt;head&gt;</p>
-<p class="p1">    &lt;meta charset="UTF-8"&gt;</p>
-<p class="p1">    &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;</p>
-<p class="p1">    &lt;title&gt;Smart Rack OS v8.0 - Absolute Precision Pro&lt;/title&gt;</p>
-<p class="p1">    &lt;style&gt;</p>
-<p class="p1">        /* --- 1. Apple 프리미엄 테크 UI 테마 정의 (글래스모피즘) --- */</p>
-<p class="p1">        :root {</p>
-<p class="p1">            --breeding-color: #ffffff;</p>
-<p class="p1">            --mating-color: #ffd60a;</p>
-<p class="p1">            --glass-panel: rgba(255, 255, 255, 0.05);</p>
-<p class="p1">            --glass-border: rgba(255, 255, 255, 0.12);</p>
-<p class="p1">            --slot-bg: rgba(255, 255, 255, 0.02);</p>
-<p class="p1">            --slot-border: rgba(255, 255, 255, 0.15);</p>
-<p class="p1">            --text-main: #ffffff;</p>
-<p class="p1">            --text-sub: #8e8e93;</p>
-<p class="p1">        }</p>
-<p class="p2"><br></p>
-<p class="p1">        body {</p>
-<p class="p1">            margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;</p>
-<p class="p1">            background: radial-gradient(circle at 50% 30%, #1e1e2f, #000000 85%);</p>
-<p class="p1">            color: var(--text-main); height: 100vh; display: flex; flex-direction: column; overflow: hidden;</p>
-<p class="p1">            -webkit-user-select: none; user-select: none;</p>
-<p class="p1">        }</p>
-<p class="p2"><br></p>
-<p class="p1">        header {</p>
-<p class="p1">            padding: 15px 30px; display: flex; justify-content: space-between; align-items: center;</p>
-<p class="p1">            border-bottom: 1px solid var(--glass-border); background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(40px);</p>
-<p class="p1">            box-sizing: border-box; height: 65px;</p>
-<p class="p1">        }</p>
-<p class="p1">        header h1 { margin: 0; font-size: 24px; font-weight: 700; background: linear-gradient(90deg, #fff, #a1a1a6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }</p>
-<p class="p1">        </p>
-<p class="p1">        .top-right { display: flex; align-items: center; gap: 20px; }</p>
-<p class="p1">        .progress-container { width: 180px; background: rgba(255,255,255,0.1); height: 10px; border-radius: 5px; overflow: hidden; }</p>
-<p class="p1">        .progress-bar { height: 100%; background: linear-gradient(90deg, #ff9500, #ffcc00); width: 0%; transition: width 0.3s; }</p>
-<p class="p1">        .progress-text { font-size: 13px; color: var(--text-sub); font-weight: 600; }</p>
-<p class="p1">        </p>
-<p class="p1">        .header-btn { background: rgba(255,255,255,0.08); border: 1px solid var(--glass-border); color: white; padding: 8px 16px; border-radius: 10px; cursor: pointer; font-weight: 600; transition: 0.2s; }</p>
-<p class="p1">        .header-btn:hover { background: rgba(255,255,255,0.15); }</p>
-<p class="p2"><br></p>
-<p class="p1">        /* --- 2. 메인 워크스페이스 구조 --- */</p>
-<p class="p1">        .workspace { flex: 1; display: flex; overflow: hidden; }</p>
-<p class="p2"><br></p>
-<p class="p1">        /* 왼쪽 사이드바: 랙 구성 및 공간 도면 내비게이터 */</p>
-<p class="p1">        .map-nav {</p>
-<p class="p1">            width: 300px; border-right: 1px solid var(--glass-border); padding: 25px 20px;</p>
-<p class="p1">            display: flex; flex-direction: column; gap: 20px; background: rgba(0,0,0,0.3); overflow-y: auto;</p>
-<p class="p1">        }</p>
-<p class="p1">        .section-title { font-size: 13px; color: var(--text-sub); font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }</p>
-<p class="p1">        </p>
-<p class="p1">        .config-box { background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); border-radius: 16px; padding: 15px; }</p>
-<p class="p1">        .config-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 14px; }</p>
-<p class="p1">        .config-row:last-child { margin-bottom: 0; }</p>
-<p class="p1">        .config-input { width: 50px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.2); color: white; padding: 4px; border-radius: 6px; text-align: center; }</p>
-<p class="p2"><br></p>
-<p class="p1">        /* 🗺️ 동물실 실제 배치 도면 (Dropzone 역할 통합) */</p>
-<p class="p1">        .room-map {</p>
-<p class="p1">            position: relative; width: 100%; height: 290px; background: rgba(0,0,0,0.2);</p>
-<p class="p1">            border: 1px solid var(--glass-border); border-radius: 24px; box-sizing: border-box;</p>
-<p class="p1">        }</p>
-<p class="p1">        </p>
-<p class="p1">        .map-rack {</p>
-<p class="p1">            position: absolute; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.15);</p>
-<p class="p1">            border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center;</p>
-<p class="p1">            font-weight: 700; font-size: 14px; cursor: pointer; transition: all 0.2s; position: relative;</p>
-<p class="p1">        }</p>
-<p class="p1">        .map-rack.active { border-color: #ffcc00; background: rgba(255, 204, 0, 0.08); }</p>
-<p class="p1">        .map-rack h3 { margin: 0 0 5px 0; font-size: 16px; font-weight: 600; }</p>
-<p class="p1">        .map-rack p { margin: 0; font-size: 12px; color: var(--text-sub); }</p>
-<p class="p1">        .map-rack.drag-over { background: rgba(52, 199, 89, 0.15); border-color: #34c759; transform: scale(1.03); }</p>
-<p class="p2"><br></p>
-<p class="p1">        /* 사용자 제공 도면 기반 정밀 배치 좌표 */</p>
-<p class="p1">        .rack-A { top: 15px; left: 15px; width: 50px; height: 110px; }</p>
-<p class="p1">        .rack-C { top: 140px; left: 15px; width: 50px; height: 130px; }</p>
-<p class="p1">        .rack-B { top: 15px; right: 15px; width: 50px; height: 110px; }</p>
-<p class="p1">        .rack-D { bottom: 65px; left: 85px; width: 200px; height: 32px; }</p>
-<p class="p1">        .rack-E { bottom: 15px; left: 85px; width: 200px; height: 32px; }</p>
-<p class="p1">        .change-station {</p>
-<p class="p1">            position: absolute; top: 140px; right: 15px; width: 100px; height: 85px;</p>
-<p class="p1">            border: 1px dashed rgba(255,255,255,0.12); background: rgba(255,255,255,0.01);</p>
-<p class="p1">            border-radius: 14px; display: flex; align-items: center; justify-content: center;</p>
-<p class="p1">            font-size: 12px; color: var(--text-sub); text-align: center; line-height: 1.4; font-weight: 600;</p>
-<p class="p1">        }</p>
-<p class="p2"><br></p>
-<p class="p1">        /* 오른쪽: 메인 격자 보드 */</p>
-<p class="p1">        .board-pane { flex: 1; padding: 30px; display: flex; flex-direction: column; justify-content: flex-start; align-items: flex-start; overflow: auto; box-sizing: border-box; }</p>
-<p class="p1">        .board-header { margin-bottom: 20px; }</p>
-<p class="p1">        .board-title { font-size: 26px; font-weight: 700; margin: 0; }</p>
-<p class="p1">        .board-desc { font-size: 13px; color: var(--text-sub); margin-top: 4px; }</p>
-<p class="p2"><br></p>
-<p class="p1">        .grid-container {</p>
-<p class="p1">            background: var(--glass-panel); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);</p>
-<p class="p1">            border: 1px solid var(--glass-border); border-radius: 32px; padding: 25px;</p>
-<p class="p1">            box-shadow: 0 30px 60px rgba(0,0,0,0.5); position: relative; width: fit-content;</p>
-<p class="p1">        }</p>
-<p class="p1">        .grid-7 { display: grid; grid-template-columns: repeat(7, 92px); gap: 14px; position: relative; }</p>
-<p class="p2"><br></p>
-<p class="p1">        /* --- 3. 정밀 정렬 슬롯 및 프리미엄 그라데이션 케이지 객체 --- */</p>
-<p class="p1">        .slot {</p>
-<p class="p1">            width: 92px; height: 92px; border-radius: 24px; background: var(--slot-bg);</p>
-<p class="p1">            border: 1px dashed var(--slot-border); position: relative;</p>
-<p class="p1">            display: flex; align-items: center; justify-content: center; box-sizing: border-box;</p>
-<p class="p1">        }</p>
-<p class="p1">        .slot::before { content: attr(data-label); font-size: 11px; color: rgba(255,255,255,0.1); font-weight: 600; }</p>
-<p class="p1">        .slot.ghost-slot { border-color: rgba(255, 55, 95, 0.35); background: rgba(255, 55, 95, 0.02); }</p>
-<p class="p2"><br></p>
-<p class="p1">        .cage {</p>
-<p class="p1">            width: 92px; height: 92px; border-radius: 24px; position: absolute;</p>
-<p class="p1">            display: flex; flex-direction: column; align-items: center; justify-content: center;</p>
-<p class="p1">            font-weight: bold; box-shadow: 0 8px 20px rgba(0,0,0,0.3); box-sizing: border-box;</p>
-<p class="p1">            cursor: grab; touch-action: none; z-index: 10;</p>
-<p class="p1">        }</p>
-<p class="p1">        /* 연구원님 요구 그라데이션 광택 이펙트 주입 */</p>
-<p class="p1">        .cage.breeding { </p>
-<p class="p1">            background: var(--breeding-bg); color: #1c1c1e; border: 1px solid rgba(255,255,255,0.8);</p>
-<p class="p1">            box-shadow: 0 5px 15px rgba(255,255,255,0.1), 0 8px 20px rgba(0,0,0,0.3);</p>
-<p class="p1">        }</p>
-<p class="p1">        .cage.mating { </p>
-<p class="p1">            background: var(--mating-bg); color: #1c1c1e; border: 1px solid rgba(255,225,0,0.7);</p>
-<p class="p1">            box-shadow: 0 5px 15px rgba(255,214,10,0.15), 0 8px 20px rgba(0,0,0,0.3);</p>
-<p class="p1">        }</p>
-<p class="p1">        </p>
-<p class="p1">        /* ⭐️ [이격 버그 원천 차단] 1:1 정밀 포인터 고정 트래킹 엔진 전용 스타일 */</p>
-<p class="p1">        .cage.floating {</p>
-<p class="p1">            cursor: grabbing; z-index: 9999 !important;</p>
-<p class="p1">            transform: scale(1.1) translateY(-4px);</p>
-<p class="p1">            box-shadow: 0 25px 45px rgba(0,0,0,0.6);</p>
-<p class="p1">            pointer-events: none;</p>
-<p class="p1">            position: fixed !important;</p>
-<p class="p1">            left: 0; top: 0; margin: 0 !important;</p>
-<p class="p1">        }</p>
-<p class="p2"><br></p>
-<p class="p1">        .strain-code { font-size: 30px; font-weight: 800; line-height: 1; letter-spacing: -0.5px; }</p>
-<p class="p1">        .sub-id { font-size: 12px; font-weight: 700; margin-top: 5px; background: rgba(0,0,0,0.06); padding: 1px 6px; border-radius: 6px; }</p>
-<p class="p2"><br></p>
-<p class="p1">        /* --- 4. 오버레이 우측 판넬 (외부 클릭 자동 닫기) --- */</p>
-<p class="p1">        .side-panel {</p>
-<p class="p1">            position: fixed; top: 0; right: -360px; width: 330px; height: 100vh;</p>
-<p class="p1">            background: rgba(25, 25, 30, 0.85); backdrop-filter: blur(40px); border-left: 1px solid var(--glass-border);</p>
-<p class="p1">            z-index: 1500; padding: 40px 25px; box-shadow: -20px 0 40px rgba(0,0,0,0.5);</p>
-<p class="p1">            transition: right 0.3s cubic-bezier(0.16, 1, 0.3, 1); box-sizing: border-box;</p>
-<p class="p1">        }</p>
-<p class="p1">        .side-panel.open { right: 0; }</p>
-<p class="p1">        .side-panel h2 { font-size: 22px; margin-top: 0; margin-bottom: 25px; }</p>
-<p class="p1">        </p>
-<p class="p1">        .match-row { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }</p>
-<p class="p1">        .match-key { width: 40px; text-align: center; font-weight: bold; font-size: 16px; color: #ffcc00; }</p>
-<p class="p1">        .match-val { flex: 1; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.15); color: white; padding: 8px; border-radius: 8px; }</p>
-<p class="p2"><br></p>
-<p class="p1">        /* --- 5. 정보 수정 모달 창 --- */</p>
-<p class="p1">        .modal-overlay {</p>
-<p class="p1">            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;</p>
-<p class="p1">            background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); z-index: 2000;</p>
-<p class="p1">            display: none; justify-content: center; align-items: center;</p>
-<p class="p1">        }</p>
-<p class="p1">        .modal {</p>
-<p class="p1">            background: rgba(28, 28, 35, 0.95); border: 1px solid var(--glass-border); border-radius: 28px;</p>
-<p class="p1">            width: 440px; padding: 35px; box-shadow: 0 40px 80px rgba(0,0,0,0.6); box-sizing: border-box;</p>
-<p class="p1">        }</p>
-<p class="p1">        .modal h2 { margin-top: 0; margin-bottom: 20px; font-size: 22px; font-weight: 700; }</p>
-<p class="p1">        .form-group { margin-bottom: 14px; }</p>
-<p class="p1">        .form-group label { display: block; font-size: 12px; color: var(--text-sub); margin-bottom: 5px; font-weight: 600; }</p>
-<p class="p1">        .form-control {</p>
-<p class="p1">            width: 100%; padding: 10px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.15);</p>
-<p class="p1">            background: rgba(0,0,0,0.3); color: white; font-size: 14px; box-sizing: border-box;</p>
-<p class="p1">        }</p>
-<p class="p1">        .form-row { display: flex; gap: 10px; }</p>
-<p class="p1">        .modal-btns { display: flex; justify-content: flex-end; gap: 12px; margin-top: 25px; }</p>
-<p class="p1">        .btn { padding: 12px 18px; border-radius: 12px; border: none; font-weight: 600; cursor: pointer; font-size: 14px; }</p>
-<p class="p1">        .btn-cancel { background: rgba(255,255,255,0.1); color: white; }</p>
-<p class="p1">        .btn-save { background: #ffcc00; color: #1c1c1e; }</p>
-<p class="p1">        .btn-delete { background: #FF375F; color: white; margin-right: auto; }</p>
-<p class="p1">    &lt;/style&gt;</p>
-<p class="p1">&lt;/head&gt;</p>
-<p class="p1">&lt;body&gt;</p>
-<p class="p2"><br></p>
-<p class="p1">&lt;header&gt;</p>
-<p class="p1">    &lt;h1&gt;Smart Rack OS &lt;span style="font-size:14px; color:var(--mating-color); font-weight:bold; margin-left:6px;"&gt;v8.0 Absolute Precision&lt;/span&gt;&lt;/h1&gt;</p>
-<p class="p1">    &lt;div class="top-right"&gt;</p>
-<p class="p1">        &lt;div class="progress-text"&gt;공간 사용률: &lt;span id="occupancy-label"&gt;0%&lt;/span&gt;&lt;/div&gt;</p>
-<p class="p1">        &lt;div class="progress-container"&gt;&lt;div class="progress-bar" id="occupancy-bar"&gt;&lt;/div&gt;&lt;/div&gt;</p>
-<p class="p1">        &lt;button class="header-btn" onclick="openMatchPanel(event)"&gt;🧬 Strain 매칭표 편집&lt;/button&gt;</p>
-<p class="p1">    &lt;/div&gt;</p>
-<p class="p1">&lt;/header&gt;</p>
-<p class="p2"><br></p>
-<p class="p1">&lt;div class="workspace"&gt;</p>
-<p class="p1">    &lt;div class="left-sidebar"&gt;</p>
-<p class="p1">        &lt;div class="section-title"&gt;랙 줄 수 세부 설정&lt;/div&gt;</p>
-<p class="p1">        &lt;div class="config-box" id="config-box"&gt;&lt;/div&gt;</p>
-<p class="p1">        </p>
-<p class="p1">        &lt;div style="border-bottom: 1px solid var(--glass-border); margin: 5px 0;"&gt;&lt;/div&gt;</p>
-<p class="p1">        &lt;div class="section-title"&gt;연구실 배치 도면 (드래그 전환 지원)&lt;/div&gt;</p>
-<p class="p1">        </p>
-<p class="p1">        &lt;div class="room-map" id="room-map"&gt;</p>
-<p class="p1">            &lt;div class="map-rack rack-A" data-rack="A" id="map-A"&gt;A&lt;/div&gt;</p>
-<p class="p1">            &lt;div class="map-rack rack-B" data-rack="B" id="map-B"&gt;B&lt;/div&gt;</p>
-<p class="p1">            &lt;div class="map-rack rack-C" data-rack="C" id="map-C"&gt;C&lt;/div&gt;</p>
-<p class="p1">            &lt;div class="map-rack rack-D" data-rack="D" id="map-D"&gt;D&lt;/div&gt;</p>
-<p class="p1">            &lt;div class="map-rack rack-E" data-rack="E" id="map-E"&gt;E&lt;/div&gt;</p>
-<p class="p1">            &lt;div class="change-station"&gt;Change&lt;br&gt;Station&lt;/div&gt;</p>
-<p class="p1">        &lt;/div&gt;</p>
-<p class="p1">    &lt;/div&gt;</p>
-<p class="p2"><br></p>
-<p class="p1">    &lt;div class="board-pane"&gt;</p>
-<p class="p1">        &lt;div class="board-header"&gt;</p>
-<p class="p1">            &lt;h2 class="board-title" id="current-rack-title"&gt;Rack A&lt;/h2&gt;</p>
-<p class="p1">            &lt;div class="board-desc" id="current-rack-desc"&gt;계산 중...&lt;/div&gt;</p>
-<p class="p1">        &lt;/div&gt;</p>
-<p class="p1">        </p>
-<p class="p1">        &lt;div class="grid-container"&gt;</p>
-<p class="p1">            &lt;div class="grid-7" id="main-grid"&gt;&lt;/div&gt;</p>
-<p class="p1">        &lt;/div&gt;</p>
-<p class="p1">    &lt;/div&gt;</p>
-<p class="p1">&lt;/div&gt;</p>
-<p class="p2"><br></p>
-<p class="p1">&lt;div class="side-panel" id="match-panel"&gt;</p>
-<p class="p1">    &lt;h2&gt;🧬 Strain 기호 커스텀&lt;/h2&gt;</p>
-<p class="p1">    &lt;p style="font-size:12px; color:var(--text-sub); margin-bottom:20px;"&gt;기호 알파벳과 Strain 명칭을 실시간으로 수정하세요.&lt;/p&gt;</p>
-<p class="p1">    &lt;div id="mapping-list"&gt;&lt;/div&gt;</p>
-<p class="p1">    &lt;button class="header-btn" style="width:100%; margin-top:30px; background:#ffcc00; color:#1c1c1e;" onclick="toggleMatchPanel()"&gt;설정 완료 및 닫기&lt;/button&gt;</p>
-<p class="p1">&lt;/div&gt;</p>
-<p class="p2"><br></p>
-<p class="p1">&lt;div class="modal-overlay" id="modal"&gt;</p>
-<p class="p1">    &lt;div class="modal"&gt;</p>
-<p class="p1">        &lt;h2 id="modal-title"&gt;케이지 관리&lt;/h2&gt;</p>
-<p class="p1">        &lt;input type="hidden" id="m-id"&gt;</p>
-<p class="p1">        </p>
-<p class="p1">        &lt;div class="form-group"&gt;</p>
-<p class="p1">            &lt;label&gt;용도 구분&lt;/label&gt;</p>
-<p class="p1">            &lt;select id="m-type" class="form-control" onchange="toggleModalFields()"&gt;</p>
-<p class="p1">                &lt;option value="breeding"&gt;Breeding (생산용 - 흰색)&lt;/option&gt;</p>
-<p class="p1">                &lt;option value="mating"&gt;Mating (교배용 - 노란색)&lt;/option&gt;</p>
-<p class="p1">            &lt;/select&gt;</p>
-<p class="p1">        &lt;/div&gt;</p>
-<p class="p1">        &lt;div class="form-row"&gt;</p>
-<p class="p1">            &lt;div class="form-group" style="flex:1;"&gt;</p>
-<p class="p1">                &lt;label&gt;표시 알파벳 기호&lt;/label&gt;</p>
-<p class="p1">                &lt;input type="text" id="m-code" class="form-control" placeholder="예: A, C"&gt;</p>
-<p class="p1">            &lt;/div&gt;</p>
-<p class="p1">            &lt;div class="form-group" style="flex:1;"&gt;</p>
-<p class="p1">                &lt;label id="sub-label"&gt;서브 번호/마리수&lt;/label&gt;</p>
-<p class="p1">                &lt;input type="text" id="m-sub" class="form-control" placeholder="A52형태 자동 연산"&gt;</p>
-<p class="p1">            &lt;/div&gt;</p>
-<p class="p1">        &lt;/div&gt;</p>
-<p class="p1">        </p>
-<p class="p1">        &lt;div class="form-row"&gt;</p>
-<p class="p1">            &lt;div class="form-group" style="flex:1;"&gt;</p>
-<p class="p1">                &lt;label&gt;암컷 수 (♀)&lt;/label&gt;</p>
-<p class="p1">                &lt;input type="number" id="m-female" class="form-control" value="0" min="0"&gt;</p>
-<p class="p1">            &lt;/div&gt;</p>
-<p class="p1">            &lt;div class="form-group" style="flex:1;"&gt;</p>
-<p class="p1">                &lt;label&gt;수컷 수 (♂)&lt;/label&gt;</p>
-<p class="p1">                &lt;input type="number" id="m-male" class="form-control" value="0" min="0"&gt;</p>
-<p class="p1">            &lt;/div&gt;</p>
-<p class="p1">        &lt;/div&gt;</p>
-<p class="p1">        &lt;div class="form-group" id="dob-group"&gt;</p>
-<p class="p1">            &lt;label&gt;DOB (출생일)&lt;/label&gt;</p>
-<p class="p1">            &lt;input type="date" id="m-dob" class="form-control"&gt;</p>
-<p class="p1">        &lt;/div&gt;</p>
-<p class="p1">        &lt;div class="form-group" id="dom-group"&gt;</p>
-<p class="p1">            &lt;label&gt;DOM (교배일)&lt;/label&gt;</p>
-<p class="p1">            &lt;input type="date" id="m-dom" class="form-control"&gt;</p>
-<p class="p1">        &lt;/div&gt;</p>
-<p class="p1">        &lt;div class="form-group"&gt;</p>
-<p class="p1">            &lt;label&gt;특이사항 (Notes)&lt;/label&gt;</p>
-<p class="p1">            &lt;textarea id="m-notes" class="form-control" rows="2"&gt;&lt;/textarea&gt;</p>
-<p class="p1">        &lt;/div&gt;</p>
-<p class="p1">        </p>
-<p class="p1">        &lt;div class="modal-btns"&gt;</p>
-<p class="p1">            &lt;button class="btn btn-delete" id="btn-delete" onclick="deleteCage()"&gt;삭제&lt;/button&gt;</p>
-<p class="p1">            &lt;button class="btn btn-cancel" onclick="closeModal()"&gt;취소&lt;/button&gt;</p>
-<p class="p1">            &lt;button class="btn btn-save" onclick="saveCage()"&gt;적용&lt;/button&gt;</p>
-<p class="p1">        &lt;/div&gt;</p>
-<p class="p1">    &lt;/div&gt;</p>
-<p class="p1">&lt;/div&gt;</p>
-<p class="p2"><br></p>
-<p class="p1">&lt;script&gt;</p>
-<p class="p1">    let RACK_ROWS = { 'A': 5, 'B': 5, 'C': 5, 'D': 3, 'E': 3 };</p>
-<p class="p1">    let currentRack = 'A';</p>
-<p class="p1">    let STRAIN_MAP = { 'A': 'K18-hACE2', 'C': 'Aim2', 'W': 'Wild Type' };</p>
-<p class="p2"><br></p>
-<p class="p1">    let cages = [</p>
-<p class="p1">        { id: 'm1', rackId: 'A', cellIdx: 0, type: 'mating', code: 'A', subId: '51', female: 2, male: 1, dob: '', dom: '2026-05-10', notes: '' },</p>
-<p class="p1">        { id: 'm2', rackId: 'A', cellIdx: 1, type: 'mating', code: 'A', subId: '52', female: 1, male: 1, dob: '', dom: '2026-05-12', notes: '' },</p>
-<p class="p1">        { id: 'm3', rackId: 'A', cellIdx: 2, type: 'mating', code: 'A', subId: '53', female: 2, male: 1, dob: '', dom: '2026-05-14', notes: '' },</p>
-<p class="p1">        { id: 'm4', rackId: 'A', cellIdx: 3, type: 'mating', code: 'A', subId: '54', female: 2, male: 1, dob: '', dom: '2026-05-15', notes: '' },</p>
-<p class="p1">        { id: 'm5', rackId: 'B', cellIdx: 0, type: 'mating', code: 'A', subId: '55', female: 1, male: 1, dob: '', dom: '', notes: '' },</p>
-<p class="p1">        { id: 'm6', rackId: 'B', cellIdx: 1, type: 'mating', code: 'A', subId: '56', female: 1, male: 1, dob: '', dom: '', notes: '' },</p>
-<p class="p1">        { id: 'm7', rackId: 'C', cellIdx: 5, type: 'mating', code: 'A', subId: '57', female: 2, male: 1, dob: '', dom: '', notes: '' },</p>
-<p class="p1">        { id: 'm8', rackId: 'C', cellIdx: 6, type: 'mating', code: 'A', subId: '58', female: 2, male: 1, dob: '', dom: '', notes: '' },</p>
-<p class="p1">        { id: 'm9', rackId: 'D', cellIdx: 4, type: 'mating', code: 'A', subId: '59', female: 1, male: 1, dob: '', dom: '', notes: '' },</p>
-<p class="p1">        { id: 'm10', rackId: 'E', cellIdx: 4, type: 'mating', code: 'A', subId: '60', female: 1, male: 1, dob: '', dom: '', notes: '' },</p>
-<p class="p1">        { id: 'b1', rackId: 'A', cellIdx: 4, type: 'breeding', code: 'C', subId: '5마리', female: 5, male: 0, dob: '2026-04-01', dom: '', notes: '' },</p>
-<p class="p1">        { id: 'b2', rackId: 'A', cellIdx: 5, type: 'breeding', code: 'C', subId: 'C10', female: 3, male: 2, dob: '2026-04-03', dom: '', notes: '' },</p>
-<p class="p1">        { id: 'b3', rackId: 'A', cellIdx: 6, type: 'breeding', code: 'C', subId: 'C11', female: 4, male: 0, dob: '2026-04-05', dom: '', notes: '' },</p>
-<p class="p1">        { id: 'b4', rackId: 'B', cellIdx: 10, type: 'breeding', code: 'C', subId: '3마리', female: 0, male: 3, dob: '', dom: '', notes: '' },</p>
-<p class="p1">        { id: 'b5', rackId: 'B', cellIdx: 11, type: 'breeding', code: 'C', subId: '4마리', female: 2, male: 2, dob: '', dom: '', notes: '' },</p>
-<p class="p1">        { id: 'b6', rackId: 'C', cellIdx: 0, type: 'breeding', code: 'C', subId: 'C12', female: 5, male: 0, dob: '', dom: '', notes: '' },</p>
-<p class="p1">        { id: 'b7', rackId: 'C', cellIdx: 1, type: 'breeding', code: 'C', subId: 'C13', female: 3, male: 0, dob: '', dom: '', notes: '' },</p>
-<p class="p1">        { id: 'b8', rackId: 'D', cellIdx: 0, type: 'breeding', code: 'C', subId: '2마리', notes: '' },</p>
-<p class="p1">        { id: 'b9', rackId: 'D', cellIdx: 1, type: 'breeding', code: 'C', subId: 'C14', female: 4, male: 0, dob: '', dom: '', notes: '' },</p>
-<p class="p1">        { id: 'b10', rackId: 'E', cellIdx: 0, type: 'breeding', code: 'C', subId: '5마리', female: 2, male: 3, dob: '', dom: '', notes: '' }</p>
-<p class="p1">    ];</p>
-<p class="p2"><br></p>
-<p class="p1">    let dragData = { id: null, active: false, el: null, shiftX: 0, shiftY: 0 };</p>
-<p class="p2"><br></p>
-<p class="p2"><br></p>
-<p class="p1">   // --- 1. [좌표 버그 해결] 1:1 정밀 포인터 고정 트래킹 엔진 ---</p>
-<p class="p1"><span class="Apple-converted-space">    </span>function setupDragEngine(cageEl, cageId) {</p>
-<p class="p1"><span class="Apple-converted-space">        </span>cageEl.addEventListener('pointerdown', (e) =&gt; {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>if (e.button !== 0) return; // 마우스 왼쪽 클릭만 인정</p>
-<p class="p1"><span class="Apple-converted-space">            </span>e.preventDefault();</p>
-<p class="p2"><span class="Apple-converted-space">            </span></p>
-<p class="p1"><span class="Apple-converted-space">            </span>dragData.id = cageId;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>dragData.active = true;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>dragData.el = cageEl;</p>
-<p class="p2"><span class="Apple-converted-space">            </span></p>
-<p class="p1"><span class="Apple-converted-space">            </span>// ⭐️ 클릭한 순간, 요소의 실제 화면 기준 사각 좌표 측정</p>
-<p class="p1"><span class="Apple-converted-space">            </span>const rect = cageEl.getBoundingClientRect();</p>
-<p class="p1"><span class="Apple-converted-space">            </span>dragData.shiftX = e.clientX - rect.left;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>dragData.shiftY = e.clientY - rect.top;</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">            </span>// 💡 [해결 방안 1] backdrop-filter 함정 탈출</p>
-<p class="p1"><span class="Apple-converted-space">            </span>// 요소를 body로 옮겨서 좌표 기준점을 브라우저 전체 화면과 완벽히 일치시킵니다.</p>
-<p class="p1"><span class="Apple-converted-space">            </span>document.body.appendChild(cageEl);</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">            </span>cageEl.classList.add('floating');</p>
-<p class="p1"><span class="Apple-converted-space">            </span>cageEl.style.width = rect.width + 'px';</p>
-<p class="p1"><span class="Apple-converted-space">            </span>cageEl.style.height = rect.height + 'px';</p>
-<p class="p2"><span class="Apple-converted-space">            </span></p>
-<p class="p1"><span class="Apple-converted-space">            </span>// 💡 [해결 방안 2] 스케일 팽창 중심점 보정</p>
-<p class="p1"><span class="Apple-converted-space">            </span>// 커질 때 정중앙이 아닌 '내가 클릭한 마우스 위치'를 중심으로 커지게 하여 미세한 밀림을 방지합니다.</p>
-<p class="p1"><span class="Apple-converted-space">            </span>cageEl.style.transformOrigin = `${dragData.shiftX}px ${dragData.shiftY}px`;</p>
-<p class="p2"><span class="Apple-converted-space">            </span></p>
-<p class="p1"><span class="Apple-converted-space">            </span>moveAt(e.clientX, e.clientY);</p>
-<p class="p2"><span class="Apple-converted-space">            </span></p>
-<p class="p1"><span class="Apple-converted-space">            </span>document.addEventListener('pointermove', onPointerMove);</p>
-<p class="p1"><span class="Apple-converted-space">            </span>document.addEventListener('pointerup', onPointerUp);</p>
-<p class="p1"><span class="Apple-converted-space">        </span>});</p>
-<p class="p1"><span class="Apple-converted-space">    </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">    </span>function onPointerUp(e) {</p>
-<p class="p1"><span class="Apple-converted-space">        </span>if (!dragData.active) return;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>dragData.active = false;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>document.removeEventListener('pointermove', onPointerMove);</p>
-<p class="p1"><span class="Apple-converted-space">        </span>document.removeEventListener('pointerup', onPointerUp);</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>dragData.el.classList.remove('floating');</p>
-<p class="p2"><span class="Apple-converted-space">        </span></p>
-<p class="p1"><span class="Apple-converted-space">        </span>// 💡 [해결 방안 3] 임시로 body에 뺐던 유령 요소를 지워줍니다.<span class="Apple-converted-space"> </span></p>
-<p class="p1"><span class="Apple-converted-space">        </span>// (이후 로직에서 renderMainBoard()가 알아서 새 위치에 예쁘게 다시 그려줍니다)</p>
-<p class="p1"><span class="Apple-converted-space">        </span>dragData.el.remove();</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>let crossed = false;</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>// 크로스 랙 연동 드롭 처리</p>
-<p class="p1"><span class="Apple-converted-space">        </span>document.querySelectorAll('.map-rack').forEach(rackEl =&gt; {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>if (rackEl.classList.contains('drag-over')) {</p>
-<p class="p1"><span class="Apple-converted-space">                </span>rackEl.classList.remove('drag-over');</p>
-<p class="p1"><span class="Apple-converted-space">                </span>crossed = true;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>crossRackMove(dragData.id, rackEl.dataset.rack);</p>
-<p class="p1"><span class="Apple-converted-space">            </span>}</p>
-<p class="p1"><span class="Apple-converted-space">        </span>});</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>if (!crossed) {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>const slots = document.querySelectorAll('#main-grid .slot');</p>
-<p class="p1"><span class="Apple-converted-space">            </span>let targetSlot = null;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>let minD = 9999;</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">            </span>slots.forEach(slot =&gt; {</p>
-<p class="p1"><span class="Apple-converted-space">                </span>const r = slot.getBoundingClientRect();</p>
-<p class="p1"><span class="Apple-converted-space">                </span>const d = Math.hypot((r.left + r.width/2) - e.clientX, (r.top + r.height/2) - e.clientY);</p>
-<p class="p1"><span class="Apple-converted-space">                </span>if (d &lt; minD &amp;&amp; d &lt; 55) { minD = d; targetSlot = slot; }</p>
-<p class="p1"><span class="Apple-converted-space">            </span>});</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">            </span>if (targetSlot) {</p>
-<p class="p1"><span class="Apple-converted-space">                </span>executeSmartShift(dragData.id, currentRack, parseInt(targetSlot.dataset.idx));</p>
-<p class="p1"><span class="Apple-converted-space">            </span>} else {</p>
-<p class="p1"><span class="Apple-converted-space">                </span>renderMainBoard();</p>
-<p class="p1"><span class="Apple-converted-space">            </span>}</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p1"><span class="Apple-converted-space">    </span>}</p>
-<p class="p1">    function moveAt(x, y) {</p>
-<p class="p1">        // fixed 상태이므로 fixed 원점(0,0) 기준으로 마우스 좌표 - 초기 오프셋 값 매핑</p>
-<p class="p1">        dragData.el.style.left = (x - dragData.shiftX) + 'px';</p>
-<p class="p1">        dragData.el.style.top = (y - dragData.shiftY) + 'px';</p>
-<p class="p1">    }</p>
-<p class="p2"><br></p>
-<p class="p1">    function onPointerUp(e) {</p>
-<p class="p1">        if (!dragData.active) return;</p>
-<p class="p1">        dragData.active = false;</p>
-<p class="p1">        document.removeEventListener('pointermove', onPointerMove);</p>
-<p class="p1">        document.removeEventListener('pointerup', onPointerUp);</p>
-<p class="p2"><br></p>
-<p class="p1">        dragData.el.classList.remove('floating');</p>
-<p class="p1">        let crossed = false;</p>
-<p class="p2"><br></p>
-<p class="p1">        // 크로스 랙 연동 드롭 처리</p>
-<p class="p1">        document.querySelectorAll('.map-rack').forEach(rackEl =&gt; {</p>
-<p class="p1">            if (rackEl.classList.contains('drag-over')) {</p>
-<p class="p1">                rackEl.classList.remove('drag-over');</p>
-<p class="p1">                crossed = true;</p>
-<p class="p1">                crossRackMove(dragData.id, rackEl.dataset.rack);</p>
-<p class="p1">            }</p>
-<p class="p1">        });</p>
-<p class="p2"><br></p>
-<p class="p1">        if (!crossed) {</p>
-<p class="p1">            const slots = document.querySelectorAll('#main-grid .slot');</p>
-<p class="p1">            let targetSlot = null;</p>
-<p class="p1">            let minD = 9999;</p>
-<p class="p2"><br></p>
-<p class="p1">            slots.forEach(slot =&gt; {</p>
-<p class="p1">                const r = slot.getBoundingClientRect();</p>
-<p class="p1">                const d = Math.hypot((r.left + r.width/2) - e.clientX, (r.top + r.height/2) - e.clientY);</p>
-<p class="p1">                if (d &lt; minD &amp;&amp; d &lt; 55) { minD = d; targetSlot = slot; }</p>
-<p class="p1">            });</p>
-<p class="p2"><br></p>
-<p class="p1">            if (targetSlot) {</p>
-<p class="p1">                executeSmartShift(dragData.id, currentRack, parseInt(targetSlot.dataset.idx));</p>
-<p class="p1">            } else {</p>
-<p class="p1">                renderMainBoard();</p>
-<p class="p1">            }</p>
-<p class="p1">        }</p>
-<p class="p1">    }</p>
-<p class="p2"><br></p>
-<p class="p1">    // --- 2. 스마트 시프트 인덱스 제어 알고리즘 ---</p>
-<p class="p1">    function executeSmartShift(cageId, targetRack, targetIdx) {</p>
-<p class="p1">        const item = cages.find(c =&gt; c.id === cageId);</p>
-<p class="p1">        if (item.rackId === targetRack &amp;&amp; item.cellIdx === targetIdx) { renderMainBoard(); return; }</p>
-<p class="p2"><br></p>
-<p class="p1">        const occupant = cages.find(c =&gt; c.rackId === targetRack &amp;&amp; c.cellIdx === targetIdx &amp;&amp; c.id !== cageId);</p>
-<p class="p1">        if (occupant) {</p>
-<p class="p1">            let capacity = RACK_ROWS[targetRack] * 7;</p>
-<p class="p1">            let firstEmpty = -1;</p>
-<p class="p1">            for (let i = targetIdx; i &lt; capacity + 20; i++) {</p>
-<p class="p1">                if (!cages.some(c =&gt; c.rackId === targetRack &amp;&amp; c.cellIdx === i &amp;&amp; c.id !== cageId)) {</p>
-<p class="p1">                    firstEmpty = i; break;</p>
-<p class="p1">                }</p>
-<p class="p1">            }</p>
-<p class="p1">            cages.forEach(c =&gt; {</p>
-<p class="p1">                if (c.rackId === targetRack &amp;&amp; c.id !== cageId &amp;&amp; c.cellIdx &gt;= targetIdx &amp;&amp; c.cellIdx &lt; firstEmpty) {</p>
-<p class="p1">                    c.cellIdx += 1;</p>
-<p class="p1">                }</p>
-<p class="p1">            });</p>
-<p class="p1">        }</p>
-<p class="p1">        item.rackId = targetRack;</p>
-<p class="p1">        item.cellIdx = targetIdx;</p>
-<p class="p1">        renderMainBoard();</p>
-<p class="p1">        buildLeftSidebar();</p>
-<p class="p1">    }</p>
-<p class="p2"><br></p>
-<p class="p1">    function crossRackMove(cageId, targetRack) {</p>
-<p class="p1">        const item = cages.find(c =&gt; c.id === cageId);</p>
-<p class="p1">        let targetIdx = 0;</p>
-<p class="p1">        while (cages.some(c =&gt; c.rackId === targetRack &amp;&amp; c.cellIdx === targetIdx)) { targetIdx++; }</p>
-<p class="p1">        item.rackId = targetRack;</p>
-<p class="p1">        item.cellIdx = targetIdx;</p>
-<p class="p1">        currentRack = targetRack;</p>
-<p class="p1">        renderMainBoard();</p>
-<p class="p1">        buildLeftSidebar();</p>
-<p class="p1">    }</p>
-<p class="p2"><br></p>
-<p class="p1">    // --- 3. 실시간 메인 보드 격자 빌더 ---</p>
-<p class="p1">    function renderMainBoard() {</p>
-<p class="p1">        const grid = document.getElementById('main-grid');</p>
-<p class="p1">        grid.innerHTML = '';</p>
-<p class="p1">        document.getElementById('current-rack-title').innerText = `Rack ${currentRack}`;</p>
-<p class="p1">        </p>
-<p class="p1">        const baseCapacity = RACK_ROWS[currentRack] * 7;</p>
-<p class="p1">        const currentCages = cages.filter(c =&gt; c.rackId === currentRack);</p>
-<p class="p1">        const maxIdx = currentCages.reduce((max, c) =&gt; c.cellIdx &gt; max ? c.cellIdx : max, baseCapacity - 1);</p>
-<p class="p1">        const totalCapacity = maxIdx + 1;</p>
-<p class="p2"><br></p>
-<p class="p1">        document.getElementById('current-rack-desc').innerText = `${RACK_ROWS[currentRack]}행 × 7열 (${baseCapacity}칸 내부 정원)`;</p>
-<p class="p2"><br></p>
-<p class="p1">        for (let i = 0; i &lt; totalCapacity; i++) {</p>
-<p class="p1">            const slot = document.createElement('div');</p>
-<p class="p1">            slot.className = 'slot';</p>
-<p class="p1">            if (i &gt;= baseCapacity) slot.classList.add('ghost-slot');</p>
-<p class="p1">            </p>
-<p class="p1">            const rChar = String.fromCharCode(64 + Math.floor(i / 7) + 1);</p>
-<p class="p1">            slot.setAttribute('data-label', `${rChar}-${(i % 7) + 1}`);</p>
-<p class="p1">            slot.dataset.idx = i;</p>
-<p class="p1">            slot.onclick = () =&gt; openModal(null, i);</p>
-<p class="p1">            grid.appendChild(slot);</p>
-<p class="p1">        }</p>
-<p class="p2"><br></p>
-<p class="p1">        currentCages.forEach(cage =&gt; {</p>
-<p class="p1">            const targetSlot = grid.children[cage.cellIdx];</p>
-<p class="p1">            if (!targetSlot) return;</p>
-<p class="p2"><br></p>
-<p class="p1">            const el = document.createElement('div');</p>
-<p class="p1">            el.className = `cage ${cage.type}`;</p>
-<p class="p1">            </p>
-<p class="p1">            // ⭐️ [요구사항 반영] Mating(A52형태) 및 Breeding(마리수/번호 선택) 표기 규칙 구현</p>
-<p class="p1">            let displaySub = cage.subId;</p>
-<p class="p1">            if (cage.type === 'mating') {</p>
-<p class="p1">                // 노란색(Mating)은 번호만 A52 형태처럼 크게 표시 (암수 정보는 모달에)</p>
-<p class="p1">                displaySub = cage.code + cage.subId;</p>
-<p class="p1">                el.innerHTML = `&lt;span class="strain-code" style="font-size:24px; letter-spacing:-1px;"&gt;${displaySub}&lt;/span&gt;`;</p>
-<p class="p1">            } else {</p>
-<p class="p1">                // 흰색(Breeding)은 기호와 서브텍스트(마리수/번호) 조합</p>
-<p class="p1">                el.innerHTML = `&lt;span class="strain-code"&gt;${cage.code}&lt;/span&gt;&lt;span class="sub-id"&gt;${displaySub}&lt;/span&gt;`;</p>
-<p class="p1">            }</p>
-<p class="p1">            </p>
-<p class="p1">            el.onclick = (e) =&gt; { e.stopPropagation(); openModal(cage.id); };</p>
-<p class="p1">            </p>
-<p class="p1">            // 물리 포인터 고정 트래킹 엔진 주입</p>
-<p class="p1">            setupDragEngine(el, cage.id);</p>
-<p class="p2"><br></p>
-<p class="p1">            // 초기 절대 좌표 정렬</p>
-<p class="p1">            setTimeout(() =&gt; {</p>
-<p class="p1">                el.style.left = targetSlot.offsetLeft + 'px';</p>
-<p class="p1">                el.style.top = targetSlot.offsetTop + 'px';</p>
-<p class="p1">            }, 0);</p>
-<p class="p2"><br></p>
-<p class="p1">            grid.appendChild(el);</p>
-<p class="p1">        });</p>
-<p class="p1">        updateStatsBar();</p>
-<p class="p1">    }</p>
-<p class="p2"><br></p>
-<p class="p1">    // --- 4. 왼쪽 인터페이스 제어 컴포넌트 빌더 (실시간 규격 조절) ---</p>
-<p class="p1">    function buildLeftSidebar() {</p>
-<p class="p1">        // 행 구성 설정 패널 생성</p>
-<p class="p1">        const configBox = document.getElementById('config-box');</p>
-<p class="p1">        configBox.innerHTML = '';</p>
-<p class="p1">        for (const [rName, rows] of Object.entries(RACK_ROWS)) {</p>
-<p class="p1">            const rowDiv = document.createElement('div');</p>
-<p class="p1">            rowDiv.className = 'config-row';</p>
-<p class="p1">            rowDiv.innerHTML = `</p>
-<p class="p1">                &lt;span&gt;Rack ${rName} 세로 줄 수&lt;/span&gt;</p>
-<p class="p1">                &lt;input type="number" class="config-input" value="${rows}" min="1" max="10" data-rack="${rName}"&gt;</p>
-<p class="p1">            `;</p>
-<p class="p1">            // 가로 행 수 변경 감지 연동</p>
-<p class="p1">            rowDiv.querySelector('input').onchange = (e) =&gt; {</p>
-<p class="p1">                RACK_ROWS[e.target.dataset.rack] = parseInt(e.target.value);</p>
-<p class="p1">                renderMainBoard();</p>
-<p class="p1">                buildLeftSidebar();</p>
-<p class="p1">            };</p>
-<p class="p1">            configBox.appendChild(rowDiv);</p>
-<p class="p1">        }</p>
-<p class="p2"><br></p>
-<p class="p1">        // 도면 미니 랙 내비게이터 바인딩</p>
-<p class="p1">        const nav = document.getElementById('map-navigator');</p>
-<p class="p1">        nav.innerHTML = '';</p>
-<p class="p1">        for (const rackName of Object.keys(RACK_ROWS)) {</p>
-<p class="p1">            const btn = document.createElement('div');</p>
-<p class="p1">            btn.className = `mini-rack-btn ${rackName === currentRack ? 'active' : ''}`;</p>
-<p class="p1">            btn.dataset.rack = rackName;</p>
-<p class="p2"><br></p>
-<p class="p1">            const rCages = cages.filter(c =&gt; c.rackId === rackName);</p>
-<p class="p1">            const mCount = rCages.filter(c=&gt;c.type==='mating').length;</p>
-<p class="p1">            const bCount = rCages.filter(c=&gt;c.type==='breeding').length;</p>
-<p class="p2"><br></p>
-<p class="p1">            btn.innerHTML = `</p>
-<p class="p1">                &lt;h3&gt;Rack ${rackName}&lt;/h3&gt;</p>
-<p class="p1">                &lt;p&gt;Mating: ${mCount} | Breeding: ${bCount} (${rCages.length}/${RACK_ROWS[rackName]*7}칸)&lt;/p&gt;</p>
-<p class="p1">            `;</p>
-<p class="p1">            btn.onclick = () =&gt; { currentRack = rackName; buildLeftSidebar(); renderMainBoard(); };</p>
-<p class="p1">            nav.appendChild(btn);</p>
-<p class="p1">        }</p>
-<p class="p1">    }</p>
-<p class="p2"><br></p>
-<p class="p1">    // --- 5. 상세 확장 세부 필드 제어 모달 ---</p>
-<p class="p1">    const modal = document.getElementById('modal');</p>
-<p class="p1">    let targetSlotIdxForCreate = null;</p>
-<p class="p2"><br></p>
-<p class="p1">    function openModal(cageId, slotIdx = null) {</p>
-<p class="p1">        if (cageId) {</p>
-<p class="p1">            const c = cages.find(x =&gt; x.id === cageId);</p>
-<p class="p1">            document.getElementById('modal-title').innerText = "케이지 데이터 편집";</p>
-<p class="p1">            document.getElementById('m-id').value = c.id;</p>
-<p class="p1">            document.getElementById('m-type').value = c.type;</p>
-<p class="p1">            document.getElementById('m-code').value = c.code;</p>
-<p class="p1">            document.getElementById('m-sub').value = c.subId;</p>
-<p class="p1">            document.getElementById('m-female').value = c.female !== undefined ? c.female : 0;</p>
-<p class="p1">            document.getElementById('m-male').value = c.male !== undefined ? c.male : 0;</p>
-<p class="p1">            document.getElementById('m-dob').value = c.dob || "";</p>
-<p class="p1">            document.getElementById('m-dom').value = c.dom || "";</p>
-<p class="p1">            document.getElementById('m-notes').value = c.notes || "";</p>
-<p class="p1">            document.getElementById('btn-delete').style.display = 'block';</p>
-<p class="p1">        } else {</p>
-<p class="p1">            targetSlotIdxForCreate = slotIdx;</p>
-<p class="p1">            document.getElementById('modal-title').innerText = `신규 등록 (Rack ${currentRack})`;</p>
-<p class="p1">            document.getElementById('m-id').value = "";</p>
-<p class="p1">            document.getElementById('m-type').value = "breeding";</p>
-<p class="p1">            document.getElementById('m-code').value = "";</p>
-<p class="p1">            document.getElementById('m-sub').value = "";</p>
-<p class="p1">            document.getElementById('m-female').value = 0;</p>
-<p class="p1">            document.getElementById('m-male').value = 0;</p>
-<p class="p1">            document.getElementById('m-dob').value = "";</p>
-<p class="p1">            document.getElementById('m-dom').value = "";</p>
-<p class="p1">            document.getElementById('m-notes').value = "";</p>
-<p class="p1">            document.getElementById('btn-delete').style.display = 'none';</p>
-<p class="p1">        }</p>
-<p class="p1">        toggleModalFields();</p>
-<p class="p1">        modal.style.display = 'flex';</p>
-<p class="p1">    }</p>
-<p class="p2"><br></p>
-<p class="p1">    function toggleModalFields() {</p>
-<p class="p1">        const type = document.getElementById('m-type').value;</p>
-<p class="p1">        if (type === 'mating') {</p>
-<p class="p1">            document.getElementById('dob-group').style.display = 'none';</p>
-<p class="p1">            document.getElementById('dom-group').style.display = 'block';</p>
-<p class="p1">            document.getElementById('sub-label').innerText = "Mating 일련세트 번호 (예: 52)";</p>
-<p class="p1">        } else {</p>
-<p class="p1">            document.getElementById('dob-group').style.display = 'block';</p>
-<p class="p1">            document.getElementById('dom-group').style.display = 'none';</p>
-<p class="p1">            document.getElementById('sub-label').innerText = "Genotype 번호 또는 마리수";</p>
-<p class="p1">        }</p>
-<p class="p1">    }</p>
-<p class="p2"><br></p>
-<p class="p1">    function closeModal() { modal.style.display = 'none'; }</p>
-<p class="p2"><br></p>
-<p class="p1">    function saveCage() {</p>
-<p class="p1">        const id = document.getElementById('m-id').value;</p>
-<p class="p1">        const info = {</p>
-<p class="p1">            type: document.getElementById('m-type').value,</p>
-<p class="p1">            code: document.getElementById('m-code').value.toUpperCase(),</p>
-<p class="p1">            subId: document.getElementById('m-sub').value,</p>
-<p class="p1">            female: parseInt(document.getElementById('m-female').value) || 0,</p>
-<p class="p1">            male: parseInt(document.getElementById('m-male').value) || 0,</p>
-<p class="p1">            dob: document.getElementById('m-dob').value,</p>
-<p class="p1">            dom: document.getElementById('m-dom').value,</p>
-<p class="p1">            notes: document.getElementById('m-notes').value</p>
-<p class="p1">        };</p>
-<p class="p2"><br></p>
-<p class="p1">        if (id) {</p>
-<p class="p1">            Object.assign(cages.find(x =&gt; x.id === id), info);</p>
-<p class="p1">        } else {</p>
-<p class="p1">            cages.push({ id: 'c_' + Date.now(), rackId: currentRack, cellIdx: targetSlotIdxForCreate, ...info });</p>
-<p class="p1">        }</p>
-<p class="p1">        closeModal(); renderMainBoard(); buildLeftSidebar();</p>
-<p class="p1">    }</p>
-<p class="p2"><br></p>
-<p class="p1">    function deleteCage() {</p>
-<p class="p1">        cages = cages.filter(c =&gt; c.id !== document.getElementById('m-id').value);</p>
-<p class="p1">        closeModal(); renderMainBoard(); buildLeftSidebar();</p>
-<p class="p1">    }</p>
-<p class="p2"><br></p>
-<p class="p1">    // --- 6. Strain 테이블 관리 ---</p>
-<p class="p1">    function toggleMatchPanel() {</p>
-<p class="p1">        document.getElementById('match-panel').classList.toggle('open');</p>
-<p class="p1">    }</p>
-<p class="p2"><br></p>
-<p class="p1">    function openMatchPanel(e) {</p>
-<p class="p1">        e.stopPropagation();</p>
-<p class="p1">        const listContainer = document.getElementById('mapping-list');</p>
-<p class="p1">        listContainer.innerHTML = '';</p>
-<p class="p1">        for(const [key, val] of Object.entries(STRAIN_MAP)) {</p>
-<p class="p1">            const row = document.createElement('div');</p>
-<p class="p1">            row.className = 'match-row';</p>
-<p class="p1">            row.innerHTML = `&lt;span class="match-key"&gt;${key}&lt;/span&gt;&lt;input type="text" class="match-val" value="${val}"&gt;`;</p>
-<p class="p1">            listContainer.appendChild(row);</p>
-<p class="p1">        }</p>
-<p class="p1">        matchPanel.classList.add('open');</p>
-<p class="p1">    }</p>
-<p class="p2"><br></p>
-<p class="p1">    function updateStatsBar() {</p>
-<p class="p1">        const total = Object.values(RACK_ROWS).reduce((a,b)=&gt;a+b, 0) * 7;</p>
-<p class="p1">        const currentCount = cages.length;</p>
-<p class="p1">        const rate = total &gt; 0 ? Math.round((currentCount / total) * 100) : 0;</p>
-<p class="p1">        document.getElementById('occupancy-label').innerText = `${rate}% (${currentCount}/${total} 칸)`;</p>
-<p class="p1">        document.getElementById('occupancy-bar').style.width = `${rate}%`;</p>
-<p class="p1">    }</p>
-<p class="p2"><br></p>
-<p class="p1">    // 초기 시스템 가동</p>
-<p class="p1">    buildLeftSidebar();</p>
-<p class="p1">    renderMainBoard();</p>
-<p class="p1">&lt;/script&gt;</p>
-<p class="p2"><br></p>
-<p class="p1">&lt;/body&gt;</p>
-<p class="p1">&lt;/html&gt;</p>
+
+
+
+<header>
+
+    <h1>Smart Rack OS <span style="font-size:14px; color:var(--mating-color); font-weight:bold; margin-left:6px;">v8.0 Absolute Precision</span></h1>
+
+    <div class="top-right">
+
+        <div class="progress-text">공간 사용률: <span id="occupancy-label">0%</span></div>
+
+        <div class="progress-container"><div class="progress-bar" id="occupancy-bar"></div></div>
+
+        <button class="header-btn" onclick="openMatchPanel(event)">🧬 Strain 매칭표 편집</button>
+
+    </div>
+
+</header>
+
+
+
+<div class="workspace">
+
+    <div class="left-sidebar">
+
+        <div class="section-title">랙 줄 수 세부 설정</div>
+
+        <div class="config-box" id="config-box"></div>
+
+        
+
+        <div style="border-bottom: 1px solid var(--glass-border); margin: 5px 0;"></div>
+
+        <div class="section-title">연구실 배치 도면 (드래그 전환 지원)</div>
+
+        
+
+        <div class="room-map" id="room-map">
+
+            <div class="map-rack rack-A" data-rack="A" id="map-A">A</div>
+
+            <div class="map-rack rack-B" data-rack="B" id="map-B">B</div>
+
+            <div class="map-rack rack-C" data-rack="C" id="map-C">C</div>
+
+            <div class="map-rack rack-D" data-rack="D" id="map-D">D</div>
+
+            <div class="map-rack rack-E" data-rack="E" id="map-E">E</div>
+
+            <div class="change-station">Change<br>Station</div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="board-pane">
+
+        <div class="board-header">
+
+            <h2 class="board-title" id="current-rack-title">Rack A</h2>
+
+            <div class="board-desc" id="current-rack-desc">계산 중...</div>
+
+        </div>
+
+        
+
+        <div class="grid-container">
+
+            <div class="grid-7" id="main-grid"></div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+<div class="side-panel" id="match-panel">
+
+    <h2>🧬 Strain 기호 커스텀</h2>
+
+    <p style="font-size:12px; color:var(--text-sub); margin-bottom:20px;">기호 알파벳과 Strain 명칭을 실시간으로 수정하세요.</p>
+
+    <div id="mapping-list"></div>
+
+    <button class="header-btn" style="width:100%; margin-top:30px; background:#ffcc00; color:#1c1c1e;" onclick="toggleMatchPanel()">설정 완료 및 닫기</button>
+
+</div>
+
+
+
+<div class="modal-overlay" id="modal">
+
+    <div class="modal">
+
+        <h2 id="modal-title">케이지 관리</h2>
+
+        <input type="hidden" id="m-id">
+
+        
+
+        <div class="form-group">
+
+            <label>용도 구분</label>
+
+            <select id="m-type" class="form-control" onchange="toggleModalFields()">
+
+                <option value="breeding">Breeding (생산용 - 흰색)</option>
+
+                <option value="mating">Mating (교배용 - 노란색)</option>
+
+            </select>
+
+        </div>
+
+        <div class="form-row">
+
+            <div class="form-group" style="flex:1;">
+
+                <label>표시 알파벳 기호</label>
+
+                <input type="text" id="m-code" class="form-control" placeholder="예: A, C">
+
+            </div>
+
+            <div class="form-group" style="flex:1;">
+
+                <label id="sub-label">서브 번호/마리수</label>
+
+                <input type="text" id="m-sub" class="form-control" placeholder="A52형태 자동 연산">
+
+            </div>
+
+        </div>
+
+        
+
+        <div class="form-row">
+
+            <div class="form-group" style="flex:1;">
+
+                <label>암컷 수 (♀)</label>
+
+                <input type="number" id="m-female" class="form-control" value="0" min="0">
+
+            </div>
+
+            <div class="form-group" style="flex:1;">
+
+                <label>수컷 수 (♂)</label>
+
+                <input type="number" id="m-male" class="form-control" value="0" min="0">
+
+            </div>
+
+        </div>
+
+        <div class="form-group" id="dob-group">
+
+            <label>DOB (출생일)</label>
+
+            <input type="date" id="m-dob" class="form-control">
+
+        </div>
+
+        <div class="form-group" id="dom-group">
+
+            <label>DOM (교배일)</label>
+
+            <input type="date" id="m-dom" class="form-control">
+
+        </div>
+
+        <div class="form-group">
+
+            <label>특이사항 (Notes)</label>
+
+            <textarea id="m-notes" class="form-control" rows="2"></textarea>
+
+        </div>
+
+        
+
+        <div class="modal-btns">
+
+            <button class="btn btn-delete" id="btn-delete" onclick="deleteCage()">삭제</button>
+
+            <button class="btn btn-cancel" onclick="closeModal()">취소</button>
+
+            <button class="btn btn-save" onclick="saveCage()">적용</button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+<script>
+
+    let RACK_ROWS = { 'A': 5, 'B': 5, 'C': 5, 'D': 3, 'E': 3 };
+
+    let currentRack = 'A';
+
+    let STRAIN_MAP = { 'A': 'K18-hACE2', 'C': 'Aim2', 'W': 'Wild Type' };
+
+
+
+    let cages = [
+
+        { id: 'm1', rackId: 'A', cellIdx: 0, type: 'mating', code: 'A', subId: '51', female: 2, male: 1, dob: '', dom: '2026-05-10', notes: '' },
+
+        { id: 'm2', rackId: 'A', cellIdx: 1, type: 'mating', code: 'A', subId: '52', female: 1, male: 1, dob: '', dom: '2026-05-12', notes: '' },
+
+        { id: 'm3', rackId: 'A', cellIdx: 2, type: 'mating', code: 'A', subId: '53', female: 2, male: 1, dob: '', dom: '2026-05-14', notes: '' },
+
+        { id: 'm4', rackId: 'A', cellIdx: 3, type: 'mating', code: 'A', subId: '54', female: 2, male: 1, dob: '', dom: '2026-05-15', notes: '' },
+
+        { id: 'm5', rackId: 'B', cellIdx: 0, type: 'mating', code: 'A', subId: '55', female: 1, male: 1, dob: '', dom: '', notes: '' },
+
+        { id: 'm6', rackId: 'B', cellIdx: 1, type: 'mating', code: 'A', subId: '56', female: 1, male: 1, dob: '', dom: '', notes: '' },
+
+        { id: 'm7', rackId: 'C', cellIdx: 5, type: 'mating', code: 'A', subId: '57', female: 2, male: 1, dob: '', dom: '', notes: '' },
+
+        { id: 'm8', rackId: 'C', cellIdx: 6, type: 'mating', code: 'A', subId: '58', female: 2, male: 1, dob: '', dom: '', notes: '' },
+
+        { id: 'm9', rackId: 'D', cellIdx: 4, type: 'mating', code: 'A', subId: '59', female: 1, male: 1, dob: '', dom: '', notes: '' },
+
+        { id: 'm10', rackId: 'E', cellIdx: 4, type: 'mating', code: 'A', subId: '60', female: 1, male: 1, dob: '', dom: '', notes: '' },
+
+        { id: 'b1', rackId: 'A', cellIdx: 4, type: 'breeding', code: 'C', subId: '5마리', female: 5, male: 0, dob: '2026-04-01', dom: '', notes: '' },
+
+        { id: 'b2', rackId: 'A', cellIdx: 5, type: 'breeding', code: 'C', subId: 'C10', female: 3, male: 2, dob: '2026-04-03', dom: '', notes: '' },
+
+        { id: 'b3', rackId: 'A', cellIdx: 6, type: 'breeding', code: 'C', subId: 'C11', female: 4, male: 0, dob: '2026-04-05', dom: '', notes: '' },
+
+        { id: 'b4', rackId: 'B', cellIdx: 10, type: 'breeding', code: 'C', subId: '3마리', female: 0, male: 3, dob: '', dom: '', notes: '' },
+
+        { id: 'b5', rackId: 'B', cellIdx: 11, type: 'breeding', code: 'C', subId: '4마리', female: 2, male: 2, dob: '', dom: '', notes: '' },
+
+        { id: 'b6', rackId: 'C', cellIdx: 0, type: 'breeding', code: 'C', subId: 'C12', female: 5, male: 0, dob: '', dom: '', notes: '' },
+
+        { id: 'b7', rackId: 'C', cellIdx: 1, type: 'breeding', code: 'C', subId: 'C13', female: 3, male: 0, dob: '', dom: '', notes: '' },
+
+        { id: 'b8', rackId: 'D', cellIdx: 0, type: 'breeding', code: 'C', subId: '2마리', notes: '' },
+
+        { id: 'b9', rackId: 'D', cellIdx: 1, type: 'breeding', code: 'C', subId: 'C14', female: 4, male: 0, dob: '', dom: '', notes: '' },
+
+        { id: 'b10', rackId: 'E', cellIdx: 0, type: 'breeding', code: 'C', subId: '5마리', female: 2, male: 3, dob: '', dom: '', notes: '' }
+
+    ];
+
+
+
+    let dragData = { id: null, active: false, el: null, shiftX: 0, shiftY: 0 };
+
+
+
+
+
+   // --- 1. [좌표 버그 해결] 1:1 정밀 포인터 고정 트래킹 엔진 ---
+
+    function setupDragEngine(cageEl, cageId) {
+
+        cageEl.addEventListener('pointerdown', (e) => {
+
+            if (e.button !== 0) return; // 마우스 왼쪽 클릭만 인정
+
+            e.preventDefault();
+
+            
+
+            dragData.id = cageId;
+
+            dragData.active = true;
+
+            dragData.el = cageEl;
+
+            
+
+            // ⭐️ 클릭한 순간, 요소의 실제 화면 기준 사각 좌표 측정
+
+            const rect = cageEl.getBoundingClientRect();
+
+            dragData.shiftX = e.clientX - rect.left;
+
+            dragData.shiftY = e.clientY - rect.top;
+
+
+
+            // 💡 [해결 방안 1] backdrop-filter 함정 탈출
+
+            // 요소를 body로 옮겨서 좌표 기준점을 브라우저 전체 화면과 완벽히 일치시킵니다.
+
+            document.body.appendChild(cageEl);
+
+
+
+            cageEl.classList.add('floating');
+
+            cageEl.style.width = rect.width + 'px';
+
+            cageEl.style.height = rect.height + 'px';
+
+            
+
+            // 💡 [해결 방안 2] 스케일 팽창 중심점 보정
+
+            // 커질 때 정중앙이 아닌 '내가 클릭한 마우스 위치'를 중심으로 커지게 하여 미세한 밀림을 방지합니다.
+
+            cageEl.style.transformOrigin = `${dragData.shiftX}px ${dragData.shiftY}px`;
+
+            
+
+            moveAt(e.clientX, e.clientY);
+
+            
+
+            document.addEventListener('pointermove', onPointerMove);
+
+            document.addEventListener('pointerup', onPointerUp);
+
+        });
+
+    }
+
+
+
+    function onPointerUp(e) {
+
+        if (!dragData.active) return;
+
+        dragData.active = false;
+
+        document.removeEventListener('pointermove', onPointerMove);
+
+        document.removeEventListener('pointerup', onPointerUp);
+
+
+
+        dragData.el.classList.remove('floating');
+
+        
+
+        // 💡 [해결 방안 3] 임시로 body에 뺐던 유령 요소를 지워줍니다. 
+
+        // (이후 로직에서 renderMainBoard()가 알아서 새 위치에 예쁘게 다시 그려줍니다)
+
+        dragData.el.remove();
+
+
+
+        let crossed = false;
+
+
+
+        // 크로스 랙 연동 드롭 처리
+
+        document.querySelectorAll('.map-rack').forEach(rackEl => {
+
+            if (rackEl.classList.contains('drag-over')) {
+
+                rackEl.classList.remove('drag-over');
+
+                crossed = true;
+
+                crossRackMove(dragData.id, rackEl.dataset.rack);
+
+            }
+
+        });
+
+
+
+        if (!crossed) {
+
+            const slots = document.querySelectorAll('#main-grid .slot');
+
+            let targetSlot = null;
+
+            let minD = 9999;
+
+
+
+            slots.forEach(slot => {
+
+                const r = slot.getBoundingClientRect();
+
+                const d = Math.hypot((r.left + r.width/2) - e.clientX, (r.top + r.height/2) - e.clientY);
+
+                if (d < minD && d < 55) { minD = d; targetSlot = slot; }
+
+            });
+
+
+
+            if (targetSlot) {
+
+                executeSmartShift(dragData.id, currentRack, parseInt(targetSlot.dataset.idx));
+
+            } else {
+
+                renderMainBoard();
+
+            }
+
+        }
+
+    }
+
+    function moveAt(x, y) {
+
+        // fixed 상태이므로 fixed 원점(0,0) 기준으로 마우스 좌표 - 초기 오프셋 값 매핑
+
+        dragData.el.style.left = (x - dragData.shiftX) + 'px';
+
+        dragData.el.style.top = (y - dragData.shiftY) + 'px';
+
+    }
+
+
+
+    function onPointerUp(e) {
+
+        if (!dragData.active) return;
+
+        dragData.active = false;
+
+        document.removeEventListener('pointermove', onPointerMove);
+
+        document.removeEventListener('pointerup', onPointerUp);
+
+
+
+        dragData.el.classList.remove('floating');
+
+        let crossed = false;
+
+
+
+        // 크로스 랙 연동 드롭 처리
+
+        document.querySelectorAll('.map-rack').forEach(rackEl => {
+
+            if (rackEl.classList.contains('drag-over')) {
+
+                rackEl.classList.remove('drag-over');
+
+                crossed = true;
+
+                crossRackMove(dragData.id, rackEl.dataset.rack);
+
+            }
+
+        });
+
+
+
+        if (!crossed) {
+
+            const slots = document.querySelectorAll('#main-grid .slot');
+
+            let targetSlot = null;
+
+            let minD = 9999;
+
+
+
+            slots.forEach(slot => {
+
+                const r = slot.getBoundingClientRect();
+
+                const d = Math.hypot((r.left + r.width/2) - e.clientX, (r.top + r.height/2) - e.clientY);
+
+                if (d < minD && d < 55) { minD = d; targetSlot = slot; }
+
+            });
+
+
+
+            if (targetSlot) {
+
+                executeSmartShift(dragData.id, currentRack, parseInt(targetSlot.dataset.idx));
+
+            } else {
+
+                renderMainBoard();
+
+            }
+
+        }
+
+    }
+
+
+
+    // --- 2. 스마트 시프트 인덱스 제어 알고리즘 ---
+
+    function executeSmartShift(cageId, targetRack, targetIdx) {
+
+        const item = cages.find(c => c.id === cageId);
+
+        if (item.rackId === targetRack && item.cellIdx === targetIdx) { renderMainBoard(); return; }
+
+
+
+        const occupant = cages.find(c => c.rackId === targetRack && c.cellIdx === targetIdx && c.id !== cageId);
+
+        if (occupant) {
+
+            let capacity = RACK_ROWS[targetRack] * 7;
+
+            let firstEmpty = -1;
+
+            for (let i = targetIdx; i < capacity + 20; i++) {
+
+                if (!cages.some(c => c.rackId === targetRack && c.cellIdx === i && c.id !== cageId)) {
+
+                    firstEmpty = i; break;
+
+                }
+
+            }
+
+            cages.forEach(c => {
+
+                if (c.rackId === targetRack && c.id !== cageId && c.cellIdx >= targetIdx && c.cellIdx < firstEmpty) {
+
+                    c.cellIdx += 1;
+
+                }
+
+            });
+
+        }
+
+        item.rackId = targetRack;
+
+        item.cellIdx = targetIdx;
+
+        renderMainBoard();
+
+        buildLeftSidebar();
+
+    }
+
+
+
+    function crossRackMove(cageId, targetRack) {
+
+        const item = cages.find(c => c.id === cageId);
+
+        let targetIdx = 0;
+
+        while (cages.some(c => c.rackId === targetRack && c.cellIdx === targetIdx)) { targetIdx++; }
+
+        item.rackId = targetRack;
+
+        item.cellIdx = targetIdx;
+
+        currentRack = targetRack;
+
+        renderMainBoard();
+
+        buildLeftSidebar();
+
+    }
+
+
+
+    // --- 3. 실시간 메인 보드 격자 빌더 ---
+
+    function renderMainBoard() {
+
+        const grid = document.getElementById('main-grid');
+
+        grid.innerHTML = '';
+
+        document.getElementById('current-rack-title').innerText = `Rack ${currentRack}`;
+
+        
+
+        const baseCapacity = RACK_ROWS[currentRack] * 7;
+
+        const currentCages = cages.filter(c => c.rackId === currentRack);
+
+        const maxIdx = currentCages.reduce((max, c) => c.cellIdx > max ? c.cellIdx : max, baseCapacity - 1);
+
+        const totalCapacity = maxIdx + 1;
+
+
+
+        document.getElementById('current-rack-desc').innerText = `${RACK_ROWS[currentRack]}행 × 7열 (${baseCapacity}칸 내부 정원)`;
+
+
+
+        for (let i = 0; i < totalCapacity; i++) {
+
+            const slot = document.createElement('div');
+
+            slot.className = 'slot';
+
+            if (i >= baseCapacity) slot.classList.add('ghost-slot');
+
+            
+
+            const rChar = String.fromCharCode(64 + Math.floor(i / 7) + 1);
+
+            slot.setAttribute('data-label', `${rChar}-${(i % 7) + 1}`);
+
+            slot.dataset.idx = i;
+
+            slot.onclick = () => openModal(null, i);
+
+            grid.appendChild(slot);
+
+        }
+
+
+
+        currentCages.forEach(cage => {
+
+            const targetSlot = grid.children[cage.cellIdx];
+
+            if (!targetSlot) return;
+
+
+
+            const el = document.createElement('div');
+
+            el.className = `cage ${cage.type}`;
+
+            
+
+            // ⭐️ [요구사항 반영] Mating(A52형태) 및 Breeding(마리수/번호 선택) 표기 규칙 구현
+
+            let displaySub = cage.subId;
+
+            if (cage.type === 'mating') {
+
+                // 노란색(Mating)은 번호만 A52 형태처럼 크게 표시 (암수 정보는 모달에)
+
+                displaySub = cage.code + cage.subId;
+
+                el.innerHTML = `<span class="strain-code" style="font-size:24px; letter-spacing:-1px;">${displaySub}</span>`;
+
+            } else {
+
+                // 흰색(Breeding)은 기호와 서브텍스트(마리수/번호) 조합
+
+                el.innerHTML = `<span class="strain-code">${cage.code}</span><span class="sub-id">${displaySub}</span>`;
+
+            }
+
+            
+
+            el.onclick = (e) => { e.stopPropagation(); openModal(cage.id); };
+
+            
+
+            // 물리 포인터 고정 트래킹 엔진 주입
+
+            setupDragEngine(el, cage.id);
+
+
+
+            // 초기 절대 좌표 정렬
+
+            setTimeout(() => {
+
+                el.style.left = targetSlot.offsetLeft + 'px';
+
+                el.style.top = targetSlot.offsetTop + 'px';
+
+            }, 0);
+
+
+
+            grid.appendChild(el);
+
+        });
+
+        updateStatsBar();
+
+    }
+
+
+
+    // --- 4. 왼쪽 인터페이스 제어 컴포넌트 빌더 (실시간 규격 조절) ---
+
+    function buildLeftSidebar() {
+
+        // 행 구성 설정 패널 생성
+
+        const configBox = document.getElementById('config-box');
+
+        configBox.innerHTML = '';
+
+        for (const [rName, rows] of Object.entries(RACK_ROWS)) {
+
+            const rowDiv = document.createElement('div');
+
+            rowDiv.className = 'config-row';
+
+            rowDiv.innerHTML = `
+
+                <span>Rack ${rName} 세로 줄 수</span>
+
+                <input type="number" class="config-input" value="${rows}" min="1" max="10" data-rack="${rName}">
+
+            `;
+
+            // 가로 행 수 변경 감지 연동
+
+            rowDiv.querySelector('input').onchange = (e) => {
+
+                RACK_ROWS[e.target.dataset.rack] = parseInt(e.target.value);
+
+                renderMainBoard();
+
+                buildLeftSidebar();
+
+            };
+
+            configBox.appendChild(rowDiv);
+
+        }
+
+
+
+        // 도면 미니 랙 내비게이터 바인딩
+
+        const nav = document.getElementById('map-navigator');
+
+        nav.innerHTML = '';
+
+        for (const rackName of Object.keys(RACK_ROWS)) {
+
+            const btn = document.createElement('div');
+
+            btn.className = `mini-rack-btn ${rackName === currentRack ? 'active' : ''}`;
+
+            btn.dataset.rack = rackName;
+
+
+
+            const rCages = cages.filter(c => c.rackId === rackName);
+
+            const mCount = rCages.filter(c=>c.type==='mating').length;
+
+            const bCount = rCages.filter(c=>c.type==='breeding').length;
+
+
+
+            btn.innerHTML = `
+
+                <h3>Rack ${rackName}</h3>
+
+                <p>Mating: ${mCount} | Breeding: ${bCount} (${rCages.length}/${RACK_ROWS[rackName]*7}칸)</p>
+
+            `;
+
+            btn.onclick = () => { currentRack = rackName; buildLeftSidebar(); renderMainBoard(); };
+
+            nav.appendChild(btn);
+
+        }
+
+    }
+
+
+
+    // --- 5. 상세 확장 세부 필드 제어 모달 ---
+
+    const modal = document.getElementById('modal');
+
+    let targetSlotIdxForCreate = null;
+
+
+
+    function openModal(cageId, slotIdx = null) {
+
+        if (cageId) {
+
+            const c = cages.find(x => x.id === cageId);
+
+            document.getElementById('modal-title').innerText = "케이지 데이터 편집";
+
+            document.getElementById('m-id').value = c.id;
+
+            document.getElementById('m-type').value = c.type;
+
+            document.getElementById('m-code').value = c.code;
+
+            document.getElementById('m-sub').value = c.subId;
+
+            document.getElementById('m-female').value = c.female !== undefined ? c.female : 0;
+
+            document.getElementById('m-male').value = c.male !== undefined ? c.male : 0;
+
+            document.getElementById('m-dob').value = c.dob || "";
+
+            document.getElementById('m-dom').value = c.dom || "";
+
+            document.getElementById('m-notes').value = c.notes || "";
+
+            document.getElementById('btn-delete').style.display = 'block';
+
+        } else {
+
+            targetSlotIdxForCreate = slotIdx;
+
+            document.getElementById('modal-title').innerText = `신규 등록 (Rack ${currentRack})`;
+
+            document.getElementById('m-id').value = "";
+
+            document.getElementById('m-type').value = "breeding";
+
+            document.getElementById('m-code').value = "";
+
+            document.getElementById('m-sub').value = "";
+
+            document.getElementById('m-female').value = 0;
+
+            document.getElementById('m-male').value = 0;
+
+            document.getElementById('m-dob').value = "";
+
+            document.getElementById('m-dom').value = "";
+
+            document.getElementById('m-notes').value = "";
+
+            document.getElementById('btn-delete').style.display = 'none';
+
+        }
+
+        toggleModalFields();
+
+        modal.style.display = 'flex';
+
+    }
+
+
+
+    function toggleModalFields() {
+
+        const type = document.getElementById('m-type').value;
+
+        if (type === 'mating') {
+
+            document.getElementById('dob-group').style.display = 'none';
+
+            document.getElementById('dom-group').style.display = 'block';
+
+            document.getElementById('sub-label').innerText = "Mating 일련세트 번호 (예: 52)";
+
+        } else {
+
+            document.getElementById('dob-group').style.display = 'block';
+
+            document.getElementById('dom-group').style.display = 'none';
+
+            document.getElementById('sub-label').innerText = "Genotype 번호 또는 마리수";
+
+        }
+
+    }
+
+
+
+    function closeModal() { modal.style.display = 'none'; }
+
+
+
+    function saveCage() {
+
+        const id = document.getElementById('m-id').value;
+
+        const info = {
+
+            type: document.getElementById('m-type').value,
+
+            code: document.getElementById('m-code').value.toUpperCase(),
+
+            subId: document.getElementById('m-sub').value,
+
+            female: parseInt(document.getElementById('m-female').value) || 0,
+
+            male: parseInt(document.getElementById('m-male').value) || 0,
+
+            dob: document.getElementById('m-dob').value,
+
+            dom: document.getElementById('m-dom').value,
+
+            notes: document.getElementById('m-notes').value
+
+        };
+
+
+
+        if (id) {
+
+            Object.assign(cages.find(x => x.id === id), info);
+
+        } else {
+
+            cages.push({ id: 'c_' + Date.now(), rackId: currentRack, cellIdx: targetSlotIdxForCreate, ...info });
+
+        }
+
+        closeModal(); renderMainBoard(); buildLeftSidebar();
+
+    }
+
+
+
+    function deleteCage() {
+
+        cages = cages.filter(c => c.id !== document.getElementById('m-id').value);
+
+        closeModal(); renderMainBoard(); buildLeftSidebar();
+
+    }
+
+
+
+    // --- 6. Strain 테이블 관리 ---
+
+    function toggleMatchPanel() {
+
+        document.getElementById('match-panel').classList.toggle('open');
+
+    }
+
+
+
+    function openMatchPanel(e) {
+
+        e.stopPropagation();
+
+        const listContainer = document.getElementById('mapping-list');
+
+        listContainer.innerHTML = '';
+
+        for(const [key, val] of Object.entries(STRAIN_MAP)) {
+
+            const row = document.createElement('div');
+
+            row.className = 'match-row';
+
+            row.innerHTML = `<span class="match-key">${key}</span><input type="text" class="match-val" value="${val}">`;
+
+            listContainer.appendChild(row);
+
+        }
+
+        matchPanel.classList.add('open');
+
+    }
+
+
+
+    function updateStatsBar() {
+
+        const total = Object.values(RACK_ROWS).reduce((a,b)=>a+b, 0) * 7;
+
+        const currentCount = cages.length;
+
+        const rate = total > 0 ? Math.round((currentCount / total) * 100) : 0;
+
+        document.getElementById('occupancy-label').innerText = `${rate}% (${currentCount}/${total} 칸)`;
+
+        document.getElementById('occupancy-bar').style.width = `${rate}%`;
+
+    }
+
+
+
+    // 초기 시스템 가동
+
+    buildLeftSidebar();
+
+    renderMainBoard();
+
+</script>
+
+
+
 </body>
+
 </html>
