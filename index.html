@@ -112,13 +112,27 @@
             cursor: grab; touch-action: none; z-index: 10;
         }
         /* 💡 수정됨: bg 대신 color 변수를 매칭하여 색상이 정상 적용되게 함 */
+        /* --- 메탈릭 그라데이션 케이지 효과 --- */
         .cage.breeding { 
-            background: var(--breeding-color); color: #1c1c1e; border: 1px solid rgba(255,255,255,0.8);
-            box-shadow: 0 5px 15px rgba(255,255,255,0.1), 0 8px 20px rgba(0,0,0,0.3);
+            /* 실버/알루미늄 메탈 (흰색 베이스) */
+            background: linear-gradient(135deg, #ffffff 0%, #f0f0f5 35%, #d1d1d6 50%, #e5e5ea 65%, #ffffff 100%);
+            color: #1c1c1e; 
+            border: 1px solid rgba(255, 255, 255, 0.9);
+            border-bottom: 2px solid #a1a1a6; /* 하단 엣지 음영 */
+            box-shadow: inset 0 2px 4px rgba(255, 255, 255, 0.8), /* 상단 내부 광택 */
+                        0 5px 15px rgba(255, 255, 255, 0.05), 
+                        0 8px 20px rgba(0, 0, 0, 0.4);
         }
+        
         .cage.mating { 
-            background: var(--mating-color); color: #1c1c1e; border: 1px solid rgba(255,225,0,0.7);
-            box-shadow: 0 5px 15px rgba(255,214,10,0.15), 0 8px 20px rgba(0,0,0,0.3);
+            /* 프리미엄 골드 메탈 (노란색 베이스) */
+            background: linear-gradient(135deg, #ffeb66 0%, #ffd60a 35%, #e0b400 50%, #ffd60a 65%, #ffdf33 100%);
+            color: #1c1c1e; 
+            border: 1px solid rgba(255, 235, 102, 0.9);
+            border-bottom: 2px solid #b38e00; /* 하단 엣지 음영 */
+            box-shadow: inset 0 2px 4px rgba(255, 255, 255, 0.6), /* 상단 내부 광택 */
+                        0 5px 15px rgba(255, 214, 10, 0.1), 
+                        0 8px 20px rgba(0, 0, 0, 0.4);
         }
         
         /* ⭐️ [이격 버그 원천 차단] 1:1 정밀 포인터 고정 트래킹 엔진 전용 스타일 */
