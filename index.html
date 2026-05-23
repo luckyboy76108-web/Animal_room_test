@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Rack OS v8.3 - Absolute Precision Pro</title>
+    <title>Smart Rack OS v8.4 - Absolute Precision Pro</title>
     <style>
         :root {
             --breeding-color: #ffffff;
@@ -137,14 +137,12 @@
             position: fixed; top: 0; right: -360px; width: 330px; height: 100vh;
             background: rgba(25, 25, 30, 0.85); backdrop-filter: blur(40px); border-left: 1px solid var(--glass-border);
             z-index: 1500; padding: 40px 25px; box-shadow: -20px 0 40px rgba(0,0,0,0.5);
-            transition: right 0.3s cubic-bezier(0.16, 1, 0.3, 1); box-sizing: border-box;
+            transition: right 0.3s cubic-bezier(0.16, 1, 0.3, 1); box-sizing: border-box; overflow-y: auto;
         }
         .side-panel.open { right: 0; }
         .side-panel h2 { font-size: 22px; margin-top: 0; margin-bottom: 25px; }
         
         .match-row { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
-        .match-key { width: 40px; text-align: center; font-weight: bold; font-size: 16px; color: #ffcc00; }
-        .match-val { flex: 1; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.15); color: white; padding: 8px; border-radius: 8px; }
 
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
@@ -203,7 +201,6 @@
         .batch-bar.show { bottom: 40px; }
         .batch-count { font-weight: 700; color: #ffcc00; font-size: 15px; letter-spacing: -0.5px; }
 
-        /* 연속/비연속 상태 뱃지 */
         .contiguous-badge {
             font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 8px;
             display: flex; align-items: center; gap: 5px;
@@ -217,87 +214,44 @@
         }
         
         body.batch-mode .cage { transition: filter 0.3s, transform 0.3s; }
-        body.batch-mode .cage:not(.selected) {
-            filter: brightness(0.4) opacity(0.6);
-            transform: scale(0.95);
-        }
+        body.batch-mode .cage:not(.selected) { filter: brightness(0.4) opacity(0.6); transform: scale(0.95); }
 
-        /* ─── 오버플로우 경고: 배경 대각선 줄무늬 플래시 ─── */
-        /* 줄무늬 패턴 레이어 (body::before 로 전체 덮음) */
         body::before {
-            content: '';
-            position: fixed; inset: 0; z-index: 8000;
-            pointer-events: none;
-            background: repeating-linear-gradient(
-                -45deg,
-                rgba(255, 38, 38, 0.18) 0px,
-                rgba(255, 38, 38, 0.18) 18px,
-                transparent 18px,
-                transparent 36px
-            );
-            opacity: 0;
-            transition: opacity 0.15s ease;
+            content: ''; position: fixed; inset: 0; z-index: 8000; pointer-events: none;
+            background: repeating-linear-gradient(-45deg, rgba(255, 38, 38, 0.18) 0px, rgba(255, 38, 38, 0.18) 18px, transparent 18px, transparent 36px);
+            opacity: 0; transition: opacity 0.15s ease;
         }
-        body.overflow-alert::before {
-            animation: stripeFlash 1.1s ease-in-out infinite;
-        }
-        @keyframes stripeFlash {
-            0%, 100% { opacity: 0; }
-            45%, 55% { opacity: 1; }
-        }
+        body.overflow-alert::before { animation: stripeFlash 1.1s ease-in-out infinite; }
+        @keyframes stripeFlash { 0%, 100% { opacity: 0; } 45%, 55% { opacity: 1; } }
 
-        /* 상단 고정 경고 배너 */
         #overflow-banner {
             position: fixed; top: 65px; left: 0; right: 0; z-index: 7000;
-            background: linear-gradient(90deg, #c0001a, #ff2b2b, #c0001a);
-            background-size: 200% 100%;
-            animation: bannerSlide 2.5s linear infinite;
-            color: white; font-size: 13px; font-weight: 700;
-            padding: 0 24px; height: 0; overflow: hidden;
-            display: flex; align-items: center; justify-content: space-between;
-            transition: height 0.3s cubic-bezier(0.2,0.8,0.2,1);
-            box-shadow: 0 4px 20px rgba(255,0,0,0.4);
+            background: linear-gradient(90deg, #c0001a, #ff2b2b, #c0001a); background-size: 200% 100%;
+            animation: bannerSlide 2.5s linear infinite; color: white; font-size: 13px; font-weight: 700;
+            padding: 0 24px; height: 0; overflow: hidden; display: flex; align-items: center; justify-content: space-between;
+            transition: height 0.3s cubic-bezier(0.2,0.8,0.2,1); box-shadow: 0 4px 20px rgba(255,0,0,0.4);
         }
         #overflow-banner.show { height: 42px; }
-        @keyframes bannerSlide {
-            0% { background-position: 0% 0%; }
-            100% { background-position: 200% 0%; }
-        }
+        @keyframes bannerSlide { 0% { background-position: 0% 0%; } 100% { background-position: 200% 0%; } }
         #overflow-banner .banner-left { display: flex; align-items: center; gap: 10px; }
         #overflow-banner .banner-icon { font-size: 16px; animation: iconBlink 1.1s ease-in-out infinite; }
         @keyframes iconBlink { 0%,100%{opacity:1;} 50%{opacity:0.3;} }
-        #overflow-banner .banner-racks { 
-            background: rgba(255,255,255,0.2); border-radius: 6px;
-            padding: 2px 8px; font-size: 12px; letter-spacing: 0.5px;
-        }
+        #overflow-banner .banner-racks { background: rgba(255,255,255,0.2); border-radius: 6px; padding: 2px 8px; font-size: 12px; letter-spacing: 0.5px; }
         #overflow-banner .banner-btns { display: flex; gap: 8px; }
-        #overflow-banner .banner-btn {
-            background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4);
-            color: white; padding: 4px 12px; border-radius: 7px;
-            cursor: pointer; font-size: 12px; font-weight: 700;
-            transition: background 0.15s;
-        }
+        #overflow-banner .banner-btn { background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4); color: white; padding: 4px 12px; border-radius: 7px; cursor: pointer; font-size: 12px; font-weight: 700; transition: background 0.15s; }
         #overflow-banner .banner-btn:hover { background: rgba(255,255,255,0.35); }
         #overflow-banner .banner-btn.go { background: white; color: #c0001a; }
         #overflow-banner .banner-btn.go:hover { background: #ffe0e0; }
 
-        /* ghost-slot 빨간 펄스 강조 */
-        .slot.ghost-slot {
-            animation: ghostPulse 1.1s ease-in-out infinite;
-        }
-        @keyframes ghostPulse {
-            0%, 100% { border-color: rgba(255, 55, 95, 0.4); background: rgba(255, 55, 95, 0.03); }
-            50%       { border-color: rgba(255, 55, 95, 0.9); background: rgba(255, 55, 95, 0.12); }
-        }
-
-        /* 오버플로우 상태일 때 header 높이 보정 */
+        .slot.ghost-slot { animation: ghostPulse 1.1s ease-in-out infinite; }
+        @keyframes ghostPulse { 0%, 100% { border-color: rgba(255, 55, 95, 0.4); background: rgba(255, 55, 95, 0.03); } 50% { border-color: rgba(255, 55, 95, 0.9); background: rgba(255, 55, 95, 0.12); } }
         body.overflow-alert header { border-bottom-color: rgba(255,38,38,0.6); }
     </style>
 </head>
 <body>
 
 <header>
-    <h1>Smart Rack OS <span style="font-size:14px; color:var(--mating-color); font-weight:bold; margin-left:6px;">v8.3 Absolute Precision</span></h1>
+    <h1>Smart Rack OS <span style="font-size:14px; color:var(--mating-color); font-weight:bold; margin-left:6px;">v8.4 Absolute Precision</span></h1>
     <div class="top-right">
         <div class="progress-text">공간 사용률: <span id="occupancy-label">0%</span></div>
         <div class="progress-container"><div class="progress-bar" id="occupancy-bar"></div></div>
@@ -339,9 +293,10 @@
 
 <div class="side-panel" id="match-panel">
     <h2>🧬 Strain 기호 커스텀</h2>
-    <p style="font-size:12px; color:var(--text-sub); margin-bottom:20px;">기호 알파벳과 Strain 명칭을 실시간으로 수정하세요.</p>
-    <div id="mapping-list"></div>
-    <button class="header-btn" style="width:100%; margin-top:30px; background:#ffcc00; color:#1c1c1e;" onclick="toggleMatchPanel()">설정 완료 및 닫기</button>
+    <p style="font-size:12px; color:var(--text-sub); margin-bottom:20px;">기호 알파벳과 Strain 명칭을 자유롭게 추가하고 수정하세요.</p>
+    <div id="mapping-list" style="margin-bottom: 15px;"></div>
+    <button class="header-btn" style="width:100%; margin-bottom:10px; background:rgba(255,255,255,0.1);" onclick="addStrainRow()">+ 기호 추가</button>
+    <button class="header-btn" style="width:100%; background:#ffcc00; color:#1c1c1e;" onclick="saveAndCloseMatchPanel()">설정 완료</button>
 </div>
 
 <div class="modal-overlay" id="modal">
@@ -392,14 +347,13 @@
         <div class="modal-btns">
             <button class="btn btn-delete" id="btn-delete" onclick="deleteCage()">삭제</button>
             <button class="btn btn-cancel" onclick="closeModal()">취소</button>
-            <button class="btn btn-save" onclick="saveCage()">적용</button>
+            <button class="btn btn-save" id="btn-save" onclick="saveCage()">적용</button>
         </div>
     </div>
 </div>
 
 <div id="selection-marquee"></div>
 
-<!-- 🚨 오버플로우 경고 배너 (상단 고정) -->
 <div id="overflow-banner">
     <div class="banner-left">
         <span class="banner-icon">🚨</span>
@@ -411,7 +365,6 @@
     </div>
 </div>
 
-<!-- 일괄 작업 바 (연속성 상태 뱃지 포함) -->
 <div class="batch-bar" id="batch-bar">
     <span class="batch-count" id="batch-count">0개 선택됨</span>
     <span class="contiguous-badge" id="contiguous-badge"></span>
@@ -446,22 +399,40 @@
     let currentHoverIdx = -1;
     let batchMoveMode = false;
     let overflowTargetRack = null;
-    let overflowRackQueue = []; // 순환 바로가기용
+    let overflowRackQueue = [];
 
-    // ─────────────────────────────────────────────
-    // ⚠️  오버플로우 감지 & 배너/배경 경고 시스템
-    //
-    //  허용 동작 (오버플로우 중에도 가능):
-    //    1) 케이지 드래그 이동 (ghost슬롯 포함)
-    //    2) 케이지 클릭 → 삭제 (모달에서 삭제 버튼만 활성)
-    //    3) 랙 전환 (도면 클릭, 사이드바 클릭)
-    //    4) 일괄 선택 → 일괄 삭제 / 일괄 이동
-    //
-    //  차단 동작:
-    //    - 케이지 클릭 → 정보 수정(저장)
-    //    - 신규 케이지 등록
-    //    - Strain 매칭표 편집
-    // ─────────────────────────────────────────────
+    // --- 패널 및 외부 클릭 닫기 이벤트 ---
+    document.addEventListener('pointerdown', (e) => {
+        const matchPanel = document.getElementById('match-panel');
+        // Match 패널 밖을 클릭하면 저장 및 닫기
+        if (matchPanel.classList.contains('open') && !matchPanel.contains(e.target) && !e.target.closest('header')) {
+            saveAndCloseMatchPanel();
+            return;
+        }
+
+        if (!isBatchMode) return; 
+        if (e.button !== 0) return;
+        if (e.target.closest('.cage') || e.target.closest('header') || 
+            e.target.closest('.map-nav') || e.target.closest('.modal') || 
+            e.target.closest('.batch-bar')) return;
+        
+        e.preventDefault();
+
+        marquee.active = true;
+        marquee.startX = e.clientX;
+        marquee.startY = e.clientY;
+        marquee.initialSelected = new Set(selectedIds);
+
+        const box = document.getElementById('selection-marquee');
+        box.style.display = 'block';
+        box.style.left = e.clientX + 'px';
+        box.style.top = e.clientY + 'px';
+        box.style.width = '0px';
+        box.style.height = '0px';
+
+        document.addEventListener('pointermove', onMarqueeMove);
+        document.addEventListener('pointerup', onMarqueeUp);
+    });
 
     function getOverflowStatus() {
         const overflowed = [];
@@ -475,7 +446,6 @@
 
     function isOverflowing() { return getOverflowStatus().length > 0; }
 
-    // 배너 + 배경 줄무늬 업데이트 (렌더 후 항상 호출)
     function updateOverflowUI() {
         const all = getOverflowStatus();
         const banner = document.getElementById('overflow-banner');
@@ -490,43 +460,27 @@
 
         document.body.classList.add('overflow-alert');
         banner.classList.add('show');
-
         overflowRackQueue = all.map(o => o.rack);
-        const detail = all.map(o => `Rack ${o.rack} +${o.count}`).join('  /  ');
-        racksEl.innerText = detail;
+        racksEl.innerText = all.map(o => `Rack ${o.rack} +${o.count}`).join('  /  ');
     }
 
     function goToNextOverflowRack() {
         if (overflowRackQueue.length === 0) return;
-        // 현재 랙이 큐에 있으면 다음으로, 없으면 첫 번째로
         const idx = overflowRackQueue.indexOf(currentRack);
-        const next = overflowRackQueue[(idx + 1) % overflowRackQueue.length];
-        currentRack = next;
+        currentRack = overflowRackQueue[(idx + 1) % overflowRackQueue.length];
         buildLeftSidebar();
         renderMainBoard();
     }
 
-    // 차단이 필요한 액션에서 호출 — true 반환 시 동작 중단
-    function blockIfOverflow() {
-        return isOverflowing();
-    }
+    function blockIfOverflow() { return isOverflowing(); }
 
-    // ─────────────────────────────────────────────
-    // 📐 연속성 체크: 현재 랙 내 선택된 케이지들이
-    //    전체 랙을 걸쳐서도 연속된 슬롯을 차지하는지 확인
-    //    (A랙 마지막 슬롯 + B랙 첫 슬롯처럼 랙 경계도 연속으로 봄)
-    // ─────────────────────────────────────────────
     function checkContiguous() {
         if (selectedIds.size === 0) return { ok: false, cages: [] };
         if (selectedIds.size === 1) return { ok: true, cages: [] };
 
-        // 선택된 케이지들을 (rackId, cellIdx) 기준으로 정렬
-        // 랙 순서는 A→B→C→D→E
         const rackOrder = ['A', 'B', 'C', 'D', 'E'];
         const selected = cages.filter(c => selectedIds.has(c.id));
 
-        // 각 케이지에 "전체 절대 인덱스" 부여
-        // 각 랙의 capacity 누적합을 기반으로 계산
         function getAbsoluteIdx(cage) {
             let offset = 0;
             for (const rName of rackOrder) {
@@ -547,9 +501,6 @@
         return { ok: isContiguous, cages: sorted };
     }
 
-    // ─────────────────────────────────────────────
-    // 🔄 배치 모드 토글
-    // ─────────────────────────────────────────────
     function toggleBatchMode() {
         isBatchMode = !isBatchMode;
         const btn = document.getElementById('btn-batch');
@@ -569,15 +520,10 @@
         }
     }
 
-    // ─────────────────────────────────────────────
-    // 🚚 일괄 이동 버튼 클릭: 연속 선택된 케이지를
-    //    드래그 가능 상태로 전환
-    // ─────────────────────────────────────────────
     function startBatchMove() {
         const result = checkContiguous();
         if (!result.ok) return;
 
-        // 배치 모드 해제하고 이동 대기 상태로 전환
         batchMoveMode = true;
         isBatchMode = false;
         document.body.classList.remove('batch-mode');
@@ -585,7 +531,6 @@
         btn.classList.remove('btn-active');
         btn.innerText = '☑️ 일괄 선택';
 
-        // 안내 배지 업데이트
         const bar = document.getElementById('batch-bar');
         document.getElementById('batch-count').innerText = `${selectedIds.size}개 케이지 이동 준비됨`;
         document.getElementById('contiguous-badge').className = 'contiguous-badge ok';
@@ -593,35 +538,6 @@
         document.getElementById('btn-batch-move').style.display = 'none';
         bar.classList.add('show');
     }
-
-    // ─────────────────────────────────────────────
-    // 🔲 허공 Marquee 드래그 엔진 (누적 선택 지원)
-    // ─────────────────────────────────────────────
-    document.addEventListener('pointerdown', (e) => {
-        if (!isBatchMode) return; 
-        if (e.button !== 0) return;
-        if (e.target.closest('.cage') || e.target.closest('header') || 
-            e.target.closest('.map-nav') || e.target.closest('.modal') || 
-            e.target.closest('.batch-bar')) return;
-        
-        e.preventDefault();
-
-        marquee.active = true;
-        marquee.startX = e.clientX;
-        marquee.startY = e.clientY;
-        // ✅ 수정: 항상 누적 모드 — 기존 선택을 초기화하지 않음
-        marquee.initialSelected = new Set(selectedIds);
-
-        const box = document.getElementById('selection-marquee');
-        box.style.display = 'block';
-        box.style.left = e.clientX + 'px';
-        box.style.top = e.clientY + 'px';
-        box.style.width = '0px';
-        box.style.height = '0px';
-
-        document.addEventListener('pointermove', onMarqueeMove);
-        document.addEventListener('pointerup', onMarqueeUp);
-    });
 
     function onMarqueeMove(e) {
         if (!marquee.active) return;
@@ -634,10 +550,7 @@
         box.style.left = x + 'px'; box.style.top = y + 'px';
         box.style.width = w + 'px'; box.style.height = h + 'px';
 
-        // ✅ 수정: 이전 드래그로 선택된 것(initialSelected)을 유지하면서
-        //         현재 드래그 영역과 겹치는 케이지를 추가로 선택
         const newSelected = new Set(marquee.initialSelected);
-
         document.querySelectorAll('#main-grid .cage').forEach(el => {
             const r = el.getBoundingClientRect();
             const intersect = !(r.right < x || r.left > x + w || r.bottom < y || r.top > y + h);
@@ -654,20 +567,15 @@
         document.getElementById('selection-marquee').style.display = 'none';
         document.removeEventListener('pointermove', onMarqueeMove);
         document.removeEventListener('pointerup', onMarqueeUp);
-        // 드래그 종료 후 연속성 체크하여 UI 업데이트
         updateSelectionUI();
     }
 
-    // ─────────────────────────────────────────────
-    // 🚀 케이지 드래그 앤 드롭 엔진
-    // ─────────────────────────────────────────────
     function setupDragEngine(cageEl, cageId) {
         cageEl.addEventListener('pointerdown', (e) => {
             if (e.button !== 0) return; 
             e.preventDefault();
             e.stopPropagation();
 
-            // 일괄 선택 모드: 클릭으로 토글
             if (isBatchMode) {
                 if (selectedIds.has(cageId)) selectedIds.delete(cageId);
                 else selectedIds.add(cageId);
@@ -675,8 +583,6 @@
                 return; 
             }
 
-            // 드래그/이동은 오버플로우 중에도 항상 허용
-            // (일괄 이동 대기 모드: 선택된 케이지 중 하나를 드래그하면 전체 이동)
             if (batchMoveMode && selectedIds.has(cageId)) {
                 dragData.active = true;
                 dragData.isDragging = false;
@@ -687,7 +593,6 @@
 
                 const result = checkContiguous();
                 if (result.ok && result.cages.length > 0) {
-                    // 현재 랙에 있는 선택된 케이지만 이동
                     const currentRackSelected = result.cages
                         .filter(c => c.rackId === currentRack)
                         .sort((a, b) => a.cellIdx - b.cellIdx);
@@ -713,7 +618,6 @@
                 return;
             }
 
-            // 일반 모드: 단일/다중 드래그
             dragData.active = true;
             dragData.isDragging = false;
             dragData.startX = e.clientX;
@@ -884,10 +788,9 @@
         document.removeEventListener('pointerup', onPointerUp);
 
         if (!dragData.isDragging) {
-            // 일괄 이동 대기 모드일 때는 클릭해도 모달 안 열림
             if (!batchMoveMode) {
                 clearSelection();
-                openModal(dragData.primaryId); // 오버플로우 시 모달 내부에서 저장 버튼 비활성 처리
+                openModal(dragData.primaryId); 
             }
             return;
         }
@@ -919,7 +822,6 @@
             }
         }
 
-        // 이동 완료 후 일괄 이동 모드 해제
         if (batchMoveMode) {
             batchMoveMode = false;
             clearSelection();
@@ -931,9 +833,6 @@
         document.querySelectorAll('.map-rack').forEach(el => el.classList.remove('drag-over'));
     }
 
-    // ─────────────────────────────────────────────
-    // 🪄 UI 업데이트
-    // ─────────────────────────────────────────────
     function updateSelectionUI() {
         document.querySelectorAll('.cage').forEach(el => {
             if (selectedIds.has(el.id)) el.classList.add('selected');
@@ -951,14 +850,12 @@
 
             const result = checkContiguous();
             if (result.ok) {
-                // ✅ 연속 선택: 이동 버튼 활성화, 배치 버튼도 정상
                 badge.className = 'contiguous-badge ok';
                 badge.innerText = '✦ 연속 배치 (이동 가능)';
                 moveBtn.style.display = '';
                 moveBtn.removeAttribute('disabled');
                 batchBtn.removeAttribute('disabled');
             } else {
-                // ❌ 비연속 선택: 이동 버튼 비활성화, 배치 버튼도 비활성화
                 badge.className = 'contiguous-badge ng';
                 badge.innerText = '✕ 비연속 (이동 불가)';
                 moveBtn.setAttribute('disabled', true);
@@ -978,14 +875,12 @@
         batchMoveMode = false;
         document.getElementById('btn-batch-move').style.display = '';
 
-        // 배치 모드 버튼 상태 복원
         const batchBtn = document.getElementById('btn-batch');
         batchBtn.removeAttribute('disabled');
         if (!isBatchMode) {
             batchBtn.classList.remove('btn-active');
             batchBtn.innerText = '☑️ 일괄 선택';
         }
-
         updateSelectionUI();
     }
 
@@ -995,9 +890,6 @@
         clearSelection(); renderMainBoard(); buildLeftSidebar();
     }
 
-    // ─────────────────────────────────────────────
-    // 📋 메인 보드 렌더링
-    // ─────────────────────────────────────────────
     function renderMainBoard() {
         const grid = document.getElementById('main-grid');
         document.getElementById('current-rack-title').innerText = `Rack ${currentRack}`;
@@ -1034,16 +926,21 @@
             if (dragIds.includes(cage.id)) return; 
 
             let el = document.getElementById(cage.id);
+            let displaySub = cage.type === 'mating' ? cage.code + cage.subId : cage.subId;
+            let htmlContent = cage.type === 'mating' 
+                ? `<span class="strain-code" style="font-size:24px; letter-spacing:-1px;">${displaySub}</span>` 
+                : `<span class="strain-code">${cage.code}</span><span class="sub-id">${displaySub}</span>`;
+
             if (!el) {
-                el = document.createElement('div'); el.id = cage.id; el.className = `cage ${cage.type}`;
-                let displaySub = cage.type === 'mating' ? cage.code + cage.subId : cage.subId;
-                if (cage.type === 'mating') {
-                    el.innerHTML = `<span class="strain-code" style="font-size:24px; letter-spacing:-1px;">${displaySub}</span>`;
-                } else {
-                    el.innerHTML = `<span class="strain-code">${cage.code}</span><span class="sub-id">${displaySub}</span>`;
-                }
+                el = document.createElement('div'); el.id = cage.id; 
+                el.className = `cage ${cage.type}`;
+                el.innerHTML = htmlContent;
                 setupDragEngine(el, cage.id);
                 grid.appendChild(el);
+            } else {
+                // 💡 [버그 해결] 화면에 이미 존재하는 케이지도 텍스트/클래스를 즉시 갱신
+                el.className = `cage ${cage.type}`;
+                el.innerHTML = htmlContent;
             }
 
             if (selectedIds.has(cage.id)) el.classList.add('selected');
@@ -1081,7 +978,6 @@
     function openModal(cageId, slotIdx = null) {
         const overflow = blockIfOverflow();
 
-        // 신규 등록: 오버플로우 중 완전 차단
         if (!cageId) {
             if (overflow) return;
             targetSlotIdxForCreate = slotIdx;
@@ -1097,12 +993,10 @@
             document.getElementById('btn-delete').style.display = 'block';
 
             if (overflow) {
-                // 오버플로우 중: 삭제만 허용, 저장 비활성, 폼 읽기전용
                 document.getElementById('modal-title').innerHTML = '케이지 삭제 전용 <span style="font-size:11px;color:#FF375F;font-weight:600;background:rgba(255,55,95,0.12);padding:2px 8px;border-radius:6px;border:1px solid rgba(255,55,95,0.3);">⚠ 초과 상태 — 수정 불가</span>';
                 document.getElementById('btn-save').setAttribute('disabled', true);
                 document.getElementById('btn-save').style.opacity = '0.3';
                 document.getElementById('btn-save').style.cursor = 'not-allowed';
-                // 폼 요소 비활성화
                 document.querySelectorAll('#modal .form-control').forEach(el => el.setAttribute('disabled', true));
                 document.getElementById('m-type').setAttribute('disabled', true);
             } else {
@@ -1143,9 +1037,10 @@
     function closeModal() { modal.style.display = 'none'; dragData.id = null; }
 
     function saveCage() {
-        // 저장 버튼이 disabled 상태여도 혹시 모를 우회 방지
-        if (blockIfOverflow()) { closeModal(); return; }
         const id = document.getElementById('m-id').value;
+        // 💡 [버그 해결] 신규 생성일 때만 오버플로우 방지 (수정은 그대로 허용)
+        if (!id && blockIfOverflow()) { closeModal(); return; }
+        
         const info = {
             type: document.getElementById('m-type').value, code: document.getElementById('m-code').value.toUpperCase(),
             subId: document.getElementById('m-sub').value, female: parseInt(document.getElementById('m-female').value) || 0,
@@ -1154,6 +1049,7 @@
         };
         if (id) { Object.assign(cages.find(x => x.id === id), info); } 
         else { cages.push({ id: 'c_' + Date.now(), rackId: currentRack, cellIdx: targetSlotIdxForCreate, ...info }); }
+        
         closeModal(); renderMainBoard(); buildLeftSidebar();
     }
 
@@ -1164,17 +1060,38 @@
         closeModal(); renderMainBoard(); buildLeftSidebar();
     }
 
-    function toggleMatchPanel() { document.getElementById('match-panel').classList.toggle('open'); }
+    // --- 💡 [신규] 자유로운 Strain 커스텀 패널 로직 ---
     function openMatchPanel(e) {
         e.stopPropagation();
-        if (blockIfOverflow()) return;
         const listContainer = document.getElementById('mapping-list'); listContainer.innerHTML = '';
         for(const [key, val] of Object.entries(STRAIN_MAP)) {
-            const row = document.createElement('div'); row.className = 'match-row';
-            row.innerHTML = `<span class="match-key">${key}</span><input type="text" class="match-val" value="${val}">`;
-            listContainer.appendChild(row);
+            listContainer.appendChild(createStrainRow(key, val));
         }
         document.getElementById('match-panel').classList.add('open');
+    }
+
+    function createStrainRow(key, val) {
+        const row = document.createElement('div'); row.className = 'match-row';
+        row.innerHTML = `
+            <input type="text" class="match-key-input" value="${key}" maxlength="2" placeholder="기호" style="width:40px; text-align:center; background:rgba(0,0,0,0.4); border:1px solid rgba(255,255,255,0.15); color:#ffcc00; font-weight:bold; border-radius:8px; padding:8px;">
+            <input type="text" class="match-val-input" value="${val}" placeholder="Strain 명칭 입력" style="flex:1; background:rgba(0,0,0,0.4); border:1px solid rgba(255,255,255,0.15); color:white; padding:8px; border-radius:8px;">
+            <button onclick="this.parentElement.remove()" style="background:none; border:none; color:#FF375F; font-size:20px; font-weight:bold; cursor:pointer; padding:0 5px;">×</button>
+        `;
+        return row;
+    }
+
+    function addStrainRow() {
+        document.getElementById('mapping-list').appendChild(createStrainRow('', ''));
+    }
+
+    function saveAndCloseMatchPanel() {
+        STRAIN_MAP = {};
+        document.querySelectorAll('.match-row').forEach(row => {
+            const key = row.querySelector('.match-key-input').value.trim().toUpperCase();
+            const val = row.querySelector('.match-val-input').value.trim();
+            if (key) STRAIN_MAP[key] = val;
+        });
+        document.getElementById('match-panel').classList.remove('open');
     }
 
     function updateStatsBar() {
@@ -1183,7 +1100,7 @@
         const rate = total > 0 ? Math.round((currentCount / total) * 100) : 0;
         document.getElementById('occupancy-label').innerText = `${rate}% (${currentCount}/${total} 칸)`;
         document.getElementById('occupancy-bar').style.width = `${rate}%`;
-        updateOverflowUI(); // 매 렌더마다 오버플로우 상태 재평가
+        updateOverflowUI(); 
     }
 
     buildLeftSidebar();
