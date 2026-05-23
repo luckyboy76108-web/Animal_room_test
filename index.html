@@ -387,14 +387,12 @@
         cages.push({ id: `D_${i}`, rackId: 'D', cellIdx: i, type: 'breeding', code: 'W', subId: `${i+1}`, female: 2, male: 0 });
     }
 
-    // 💡 상태 관리 변수
-    let isBatchMode = false; // 일괄 선택 모드 토글
+    let isBatchMode = false;
     let selectedIds = new Set();
     let dragData = { active: false, isDragging: false, items: [], primaryId: null, blockOffset: 0, startX: 0, startY: 0 };
     let marquee = { active: false, startX: 0, startY: 0, additive: false, initial: new Set() };
     let currentHoverIdx = -1;
 
-    // --- 🪄 [신규] 일괄 선택 모드 토글 함수 ---
     function toggleBatchMode() {
         isBatchMode = !isBatchMode;
         const btn = document.getElementById('btn-batch');
@@ -411,11 +409,13 @@
         }
     }
 
-    // --- 🖱️ [수정됨] 드래그 다중 선택 기능 (모드 켜졌을 때만 작동) ---
+    // --- 🖱️ [수정됨] 완벽 분리된 허공 드래그(Marquee) 엔진 ---
     document.addEventListener('pointerdown', (e) => {
-        if (!isBatchMode) return; // 💡 버튼을 안 눌렀으면 드래그 박스 작동 안 함! (기존 스크롤 충돌 해결)
+        if (!isBatchMode) return; 
         if (e.button !== 0 || e.target.closest('.cage') || e.target.closest('header') || e.target.closest('.map-nav') || e.target.closest('.modal') || e.target.closest('.batch-bar')) return;
         
+        e.preventDefault(); // 💡 브라우저 기본 텍스트 선택(파란색 하이라이트) 방지
+
         marquee.active = true;
         marquee.startX = e.clientX;
         marquee.startY = e.clientY;
@@ -434,24 +434,56 @@
         box.style.top = e.clientY + 'px';
         box.style.width = '0px';
         box.style.height = '0px';
+
+        // 💡 허공 드래그 전용 추적기 부착
+        document.addEventListener('pointermove', onMarqueeMove);
+        document.addEventListener('pointerup', onMarqueeUp);
     });
 
-    // --- 🚀 코어 엔진 (선택 모드와 이동 모드의 완벽한 분리) ---
+    function onMarqueeMove(e) {
+        if (!marquee.active) return;
+        const box = document.getElementById('selection-marquee');
+        const x = Math.min(e.clientX, marquee.startX);
+        const y = Math.min(e.clientY, marquee.startY);
+        const w = Math.abs(e.clientX - marquee.startX);
+        const h = Math.abs(e.clientY - marquee.startY);
+        
+        box.style.left = x + 'px'; box.style.top = y + 'px';
+        box.style.width = w + 'px'; box.style.height = h + 'px';
+
+        if (!marquee.additive) selectedIds.clear();
+        else selectedIds = new Set(marquee.initial);
+
+        document.querySelectorAll('#main-grid .cage').forEach(el => {
+            const r = el.getBoundingClientRect();
+            const intersect = !(r.right < x || r.left > x + w || r.bottom < y || r.top > y + h);
+            if (intersect) selectedIds.add(el.id);
+        });
+        updateSelectionUI();
+    }
+
+    function onMarqueeUp(e) {
+        if (!marquee.active) return;
+        marquee.active = false;
+        document.getElementById('selection-marquee').style.display = 'none';
+        document.removeEventListener('pointermove', onMarqueeMove);
+        document.removeEventListener('pointerup', onMarqueeUp);
+    }
+
+    // --- 🚀 케이지 드래그 앤 드롭 전용 엔진 ---
     function setupDragEngine(cageEl, cageId) {
         cageEl.addEventListener('pointerdown', (e) => {
             if (e.button !== 0) return; 
             e.preventDefault();
-            e.stopPropagation();
+            e.stopPropagation(); // 💡 케이지 클릭 시 배경 드래그 발동 방지
 
-            // 💡 1. 일괄 선택 모드일 때: 케이지를 클릭하면 '선택'만 되고 움직이지 않음
             if (isBatchMode) {
                 if (selectedIds.has(cageId)) selectedIds.delete(cageId);
                 else selectedIds.add(cageId);
                 updateSelectionUI();
-                return; // 여기서 멈춤 (드래그 이동 불가)
+                return; 
             }
 
-            // 💡 2. 일반 모드일 때: 선택된 블록이거나 단일 케이지 이동 시작
             dragData.active = true;
             dragData.isDragging = false;
             dragData.startX = e.clientX;
@@ -493,28 +525,6 @@
     }
 
     function onPointerMove(e) {
-        if (marquee.active) {
-            const box = document.getElementById('selection-marquee');
-            const x = Math.min(e.clientX, marquee.startX);
-            const y = Math.min(e.clientY, marquee.startY);
-            const w = Math.abs(e.clientX - marquee.startX);
-            const h = Math.abs(e.clientY - marquee.startY);
-            
-            box.style.left = x + 'px'; box.style.top = y + 'px';
-            box.style.width = w + 'px'; box.style.height = h + 'px';
-
-            if (!marquee.additive) selectedIds.clear();
-            else selectedIds = new Set(marquee.initial);
-
-            document.querySelectorAll('#main-grid .cage').forEach(el => {
-                const r = el.getBoundingClientRect();
-                const intersect = !(r.right < x || r.left > x + w || r.bottom < y || r.top > y + h);
-                if (intersect) selectedIds.add(el.id);
-            });
-            updateSelectionUI();
-            return;
-        }
-
         if (!dragData.active) return;
         
         if (!dragData.isDragging) {
@@ -638,12 +648,6 @@
     }
 
     function onPointerUp(e) {
-        if (marquee.active) {
-            marquee.active = false;
-            document.getElementById('selection-marquee').style.display = 'none';
-            return;
-        }
-
         if (!dragData.active) return;
         dragData.active = false;
         document.removeEventListener('pointermove', onPointerMove);
@@ -686,6 +690,7 @@
         document.querySelectorAll('.map-rack').forEach(el => el.classList.remove('drag-over'));
     }
 
+    // --- 🪄 UI 업데이트 및 기본 시스템 함수들 ---
     function updateSelectionUI() {
         document.querySelectorAll('.cage').forEach(el => {
             if (selectedIds.has(el.id)) el.classList.add('selected');
