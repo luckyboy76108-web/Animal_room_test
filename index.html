@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Rack OS v8.0 - Absolute Precision Pro</title>
+    <title>Smart Rack OS v8.1 - Absolute Precision Pro</title>
     <style>
-        /* --- 1. Apple 프리미엄 테크 UI 테마 정의 (글래스모피즘) --- */
         :root {
             --breeding-color: #ffffff;
             --mating-color: #ffd60a;
@@ -38,11 +37,10 @@
         
         .header-btn { background: rgba(255,255,255,0.08); border: 1px solid var(--glass-border); color: white; padding: 8px 16px; border-radius: 10px; cursor: pointer; font-weight: 600; transition: 0.2s; }
         .header-btn:hover { background: rgba(255,255,255,0.15); }
+        .header-btn:disabled { opacity: 0.35; cursor: not-allowed; pointer-events: none; }
 
-        /* --- 2. 메인 워크스페이스 구조 --- */
         .workspace { flex: 1; display: flex; overflow: hidden; }
 
-        /* 왼쪽 사이드바: 랙 구성 및 공간 도면 내비게이터 */
         .map-nav {
             width: 300px; border-right: 1px solid var(--glass-border); padding: 25px 20px;
             display: flex; flex-direction: column; gap: 20px; background: rgba(0,0,0,0.3); overflow-y: auto;
@@ -54,56 +52,36 @@
         .config-row:last-child { margin-bottom: 0; }
         .config-input { width: 50px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.2); color: white; padding: 4px; border-radius: 6px; text-align: center; }
 
-        /* 🗺️ 동물실 실제 배치 도면 (Dropzone 역할 통합) */
-        /* 🗺️ 동물실 실제 배치 도면 (컨테이너 전체 배치 및 높이 확장) */
         .room-map {
-            position: relative;
-            width: 100%;
-            height: 360px; /* 💡 수정됨: 하단 영역 랙들을 수용하기 위해 높이를 넉넉히 확보 (290px -> 360px) */
-            margin-top: auto; /* 💡 수정됨: 도면 컨테이너 자체를 사이드바 하단에 정렬 */
-            margin-bottom: 0;
-            background: rgba(0,0,0,0.2);
-            border: 1px solid var(--glass-border);
-            border-radius: 24px;
-            box-sizing: border-box;
-            overflow: hidden; /* 도면 박스 밖으로 나가는 요소 숨김 */
+            position: relative; width: 100%; height: 360px;
+            margin-top: auto; margin-bottom: 0;
+            background: rgba(0,0,0,0.2); border: 1px solid var(--glass-border);
+            border-radius: 24px; box-sizing: border-box; overflow: hidden;
         }
 
-        /* --- 💡 도면 내 요소 정밀 배치 좌표 --- */
-        
         .map-rack {
-            position: absolute; /* 💡 필수: 컨테이너(room-map)를 기준으로 절대 좌표 배치. 뒤에 relative 오타를 반드시 지워주세요! */
+            position: absolute;
             background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.15);
             border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center;
             font-weight: 700; font-size: 14px; cursor: pointer; transition: all 0.2s;
-            /* 💣 오타 주의: 여기에 position: relative; 를 절대 넣지 마세요! 이 한 줄이 도면을 망쳤습니다. */
         }
         .map-rack.active { border-color: #ffcc00; background: rgba(255, 204, 0, 0.08); box-shadow: 0 0 15px rgba(255,204,0,0.2); }
         .map-rack h3 { margin: 0 0 5px 0; font-size: 16px; font-weight: 600; }
         .map-rack p { margin: 0; font-size: 12px; color: var(--text-sub); }
         .map-rack.drag-over { background: rgba(52, 199, 89, 0.15); border-color: #34c759; transform: scale(1.03); }
-        /* --- 💡 도면 내 요소 정밀 배치 좌표 수정 --- */
 
-        /* 1행: A (좌), B (우) - 상단 고정 */
         .rack-A { top: 15px; left: 15px; width: 80px; height: 110px; }
         .rack-B { top: 15px; right: 15px; width: 80px; height: 110px; }
-        
-        /* 2행: C (좌) 🟢 이 부분이 수정되었습니다. Change Station과 나란히 배치 */
         .rack-C { top: 140px; left: 15px; width: 80px; height: 110px; }
-
-        /* 2행: Change Station (우) */
         .change-station {
             position: absolute; top: 140px; right: 15px; width: 80px; height: 110px;
             border: 1px dashed rgba(255,255,255,0.12); background: rgba(255,255,255,0.01);
             border-radius: 12px; display: flex; align-items: center; justify-content: center;
             font-size: 12px; color: var(--text-sub); text-align: center; line-height: 1.4; font-weight: 600;
         }
-        
-        /* 3행, 4행: D, E - 하단 가로 배치 (왼쪽 여백 확보 및 너비 축소) */
-        /* left를 85px로 늘려 왼쪽 공간을 비우고, 너비를 180px 정도로 고정합니다. */
         .rack-D { top: 265px; left: 85px; width: 180px; height: 32px; }
         .rack-E { top: 310px; left: 85px; width: 180px; height: 32px; }
-        /* 오른쪽: 메인 격자 보드 */
+
         .board-pane { flex: 1; padding: 30px; display: flex; flex-direction: column; justify-content: flex-start; align-items: flex-start; overflow: auto; box-sizing: border-box; }
         .board-header { margin-bottom: 20px; }
         .board-title { font-size: 26px; font-weight: 700; margin: 0; }
@@ -116,7 +94,6 @@
         }
         .grid-7 { display: grid; grid-template-columns: repeat(7, 92px); gap: 14px; position: relative; }
 
-        /* --- 3. 정밀 정렬 슬롯 및 프리미엄 그라데이션 케이지 객체 --- */
         .slot {
             width: 92px; height: 92px; border-radius: 24px; background: var(--slot-bg);
             border: 1px dashed var(--slot-border); position: relative;
@@ -130,49 +107,32 @@
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             font-weight: bold; box-shadow: 0 8px 20px rgba(0,0,0,0.3); box-sizing: border-box;
             cursor: grab; touch-action: none; z-index: 10;
-            /* 💡 추가됨: 위치(left, top)가 변할 때 부드럽게 미끄러지는 효과 */
             transition: left 0.35s cubic-bezier(0.2, 0.8, 0.2, 1), top 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
         }
-        /* 💡 수정됨: bg 대신 color 변수를 매칭하여 색상이 정상 적용되게 함 */
-        /* --- 메탈릭 그라데이션 케이지 효과 --- */
         .cage.breeding { 
-            /* 실버/알루미늄 메탈 (흰색 베이스) */
             background: linear-gradient(135deg, #ffffff 0%, #f0f0f5 35%, #d1d1d6 50%, #e5e5ea 65%, #ffffff 100%);
-            color: #1c1c1e; 
-            border: 1px solid rgba(255, 255, 255, 0.9);
-            border-bottom: 2px solid #a1a1a6; /* 하단 엣지 음영 */
-            box-shadow: inset 0 2px 4px rgba(255, 255, 255, 0.8), /* 상단 내부 광택 */
-                        0 5px 15px rgba(255, 255, 255, 0.05), 
-                        0 8px 20px rgba(0, 0, 0, 0.4);
+            color: #1c1c1e; border: 1px solid rgba(255, 255, 255, 0.9);
+            border-bottom: 2px solid #a1a1a6;
+            box-shadow: inset 0 2px 4px rgba(255, 255, 255, 0.8), 0 5px 15px rgba(255, 255, 255, 0.05), 0 8px 20px rgba(0, 0, 0, 0.4);
         }
-        
         .cage.mating { 
-            /* 프리미엄 골드 메탈 (노란색 베이스) */
             background: linear-gradient(135deg, #ffeb66 0%, #ffd60a 35%, #e0b400 50%, #ffd60a 65%, #ffdf33 100%);
-            color: #1c1c1e; 
-            border: 1px solid rgba(255, 235, 102, 0.9);
-            border-bottom: 2px solid #b38e00; /* 하단 엣지 음영 */
-            box-shadow: inset 0 2px 4px rgba(255, 255, 255, 0.6), /* 상단 내부 광택 */
-                        0 5px 15px rgba(255, 214, 10, 0.1), 
-                        0 8px 20px rgba(0, 0, 0, 0.4);
+            color: #1c1c1e; border: 1px solid rgba(255, 235, 102, 0.9);
+            border-bottom: 2px solid #b38e00;
+            box-shadow: inset 0 2px 4px rgba(255, 255, 255, 0.6), 0 5px 15px rgba(255, 214, 10, 0.1), 0 8px 20px rgba(0, 0, 0, 0.4);
         }
-        
-        /* ⭐️ [이격 버그 원천 차단] 1:1 정밀 포인터 고정 트래킹 엔진 전용 스타일 */
         .cage.floating {
             cursor: grabbing; z-index: 9999 !important;
             transform: scale(1.1) translateY(-4px);
             box-shadow: 0 25px 45px rgba(0,0,0,0.6);
-            pointer-events: none;
-            position: fixed !important;
+            pointer-events: none; position: fixed !important;
             left: 0; top: 0; margin: 0 !important;
-            /* 💡 추가됨: 마우스로 끌고 다닐 때는 부드러운 효과를 꺼야 포인터를 늦지 않게 따라갑니다. */
             transition: none !important; 
         }
 
         .strain-code { font-size: 30px; font-weight: 800; line-height: 1; letter-spacing: -0.5px; }
         .sub-id { font-size: 12px; font-weight: 700; margin-top: 5px; background: rgba(0,0,0,0.06); padding: 1px 6px; border-radius: 6px; }
 
-        /* --- 4. 오버레이 우측 판넬 (외부 클릭 자동 닫기) --- */
         .side-panel {
             position: fixed; top: 0; right: -360px; width: 330px; height: 100vh;
             background: rgba(25, 25, 30, 0.85); backdrop-filter: blur(40px); border-left: 1px solid var(--glass-border);
@@ -186,7 +146,6 @@
         .match-key { width: 40px; text-align: center; font-weight: bold; font-size: 16px; color: #ffcc00; }
         .match-val { flex: 1; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.15); color: white; padding: 8px; border-radius: 8px; }
 
-        /* --- 5. 정보 수정 모달 창 --- */
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); z-index: 2000;
@@ -209,8 +168,7 @@
         .btn-cancel { background: rgba(255,255,255,0.1); color: white; }
         .btn-save { background: #ffcc00; color: #1c1c1e; }
         .btn-delete { background: #FF375F; color: white; margin-right: auto; }
-        /* --- 💡 [신규] 다중 선택 박스 및 선택된 케이지 효과 --- */
-        /* --- 💡 [신규] 다중 선택 박스 및 선택된 케이지 효과 --- */
+
         #selection-marquee {
             position: fixed; display: none; z-index: 9999; pointer-events: none;
             background: rgba(10, 132, 255, 0.2); border: 1px solid rgba(10, 132, 255, 0.8);
@@ -232,26 +190,33 @@
             box-shadow: 0 4px 10px rgba(255, 55, 95, 0.5); z-index: 10000;
         }
 
-        /* --- 💡 [신규] 하단 일괄 작업 플로팅 바 --- */
+        /* 일괄 작업 플로팅 바 */
         .batch-bar {
-            position: fixed; bottom: -100px; left: 50%; transform: translateX(-50%);
+            position: fixed; bottom: -120px; left: 50%; transform: translateX(-50%);
             background: rgba(28, 28, 35, 0.95); backdrop-filter: blur(30px);
             border: 1px solid var(--glass-border); border-radius: 20px;
-            padding: 15px 25px; display: flex; align-items: center; gap: 20px;
+            padding: 15px 25px; display: flex; align-items: center; gap: 16px;
             box-shadow: 0 20px 50px rgba(0,0,0,0.8); z-index: 3000;
             transition: bottom 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+            white-space: nowrap;
         }
         .batch-bar.show { bottom: 40px; }
-        .batch-count { font-weight: 700; color: #ffcc00; font-size: 15px; letter-spacing: -0.5px;}
-        /* --- 💡 [신규] 일괄 선택 모드 전용 효과 --- */
+        .batch-count { font-weight: 700; color: #ffcc00; font-size: 15px; letter-spacing: -0.5px; }
+
+        /* 연속/비연속 상태 뱃지 */
+        .contiguous-badge {
+            font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 8px;
+            display: flex; align-items: center; gap: 5px;
+        }
+        .contiguous-badge.ok { background: rgba(52, 199, 89, 0.2); color: #34c759; border: 1px solid rgba(52,199,89,0.4); }
+        .contiguous-badge.ng { background: rgba(255, 55, 95, 0.15); color: #FF375F; border: 1px solid rgba(255,55,95,0.3); }
+
         .btn-active {
             background: #0a84ff !important; color: white !important;
             border-color: #0a84ff !important; box-shadow: 0 0 15px rgba(10, 132, 255, 0.4);
         }
         
         body.batch-mode .cage { transition: filter 0.3s, transform 0.3s; }
-        
-        /* 모드 활성화 시 선택되지 않은 녀석들은 어둡게 가라앉음 */
         body.batch-mode .cage:not(.selected) {
             filter: brightness(0.4) opacity(0.6);
             transform: scale(0.95);
@@ -261,13 +226,12 @@
 <body>
 
 <header>
-    <h1>Smart Rack OS <span style="font-size:14px; color:var(--mating-color); font-weight:bold; margin-left:6px;">v8.0 Absolute Precision</span></h1>
+    <h1>Smart Rack OS <span style="font-size:14px; color:var(--mating-color); font-weight:bold; margin-left:6px;">v8.1 Absolute Precision</span></h1>
     <div class="top-right">
         <div class="progress-text">공간 사용률: <span id="occupancy-label">0%</span></div>
         <div class="progress-container"><div class="progress-bar" id="occupancy-bar"></div></div>
         
         <button class="header-btn" id="btn-batch" onclick="toggleBatchMode()">☑️ 일괄 선택</button>
-        
         <button class="header-btn" onclick="openMatchPanel(event)">🧬 Strain 매칭표 편집</button>
     </div>
 </header>
@@ -331,7 +295,6 @@
                 <input type="text" id="m-sub" class="form-control" placeholder="A52형태 자동 연산">
             </div>
         </div>
-        
         <div class="form-row">
             <div class="form-group" style="flex:1;">
                 <label>암컷 수 (♀)</label>
@@ -362,12 +325,18 @@
         </div>
     </div>
 </div>
+
 <div id="selection-marquee"></div>
+
+<!-- 일괄 작업 바 (연속성 상태 뱃지 포함) -->
 <div class="batch-bar" id="batch-bar">
     <span class="batch-count" id="batch-count">0개 선택됨</span>
+    <span class="contiguous-badge" id="contiguous-badge"></span>
     <button class="header-btn" style="background: rgba(255,255,255,0.1);" onclick="clearSelection()">선택 해제</button>
+    <button class="header-btn" id="btn-batch-move" style="background: #0a84ff; border-color: #0a84ff;" onclick="startBatchMove()">🚚 일괄 이동</button>
     <button class="header-btn" style="background: #FF375F; border-color: #FF375F;" onclick="deleteSelectedCages()">🗑️ 일괄 삭제</button>
 </div>
+
 <script>
     let RACK_ROWS = { 'A': 5, 'B': 5, 'C': 5, 'D': 3, 'E': 3 };
     let currentRack = 'A';
@@ -390,43 +359,110 @@
     let isBatchMode = false;
     let selectedIds = new Set();
     let dragData = { active: false, isDragging: false, items: [], primaryId: null, blockOffset: 0, startX: 0, startY: 0 };
-    let marquee = { active: false, startX: 0, startY: 0, additive: false, initial: new Set() };
+    let marquee = { active: false, startX: 0, startY: 0 };
     let currentHoverIdx = -1;
+    let batchMoveMode = false; // 일괄 이동 대기 상태
 
+    // ─────────────────────────────────────────────
+    // 📐 연속성 체크: 현재 랙 내 선택된 케이지들이
+    //    전체 랙을 걸쳐서도 연속된 슬롯을 차지하는지 확인
+    //    (A랙 마지막 슬롯 + B랙 첫 슬롯처럼 랙 경계도 연속으로 봄)
+    // ─────────────────────────────────────────────
+    function checkContiguous() {
+        if (selectedIds.size === 0) return { ok: false, cages: [] };
+        if (selectedIds.size === 1) return { ok: true, cages: [] };
+
+        // 선택된 케이지들을 (rackId, cellIdx) 기준으로 정렬
+        // 랙 순서는 A→B→C→D→E
+        const rackOrder = ['A', 'B', 'C', 'D', 'E'];
+        const selected = cages.filter(c => selectedIds.has(c.id));
+
+        // 각 케이지에 "전체 절대 인덱스" 부여
+        // 각 랙의 capacity 누적합을 기반으로 계산
+        function getAbsoluteIdx(cage) {
+            let offset = 0;
+            for (const rName of rackOrder) {
+                if (rName === cage.rackId) break;
+                offset += RACK_ROWS[rName] * 7;
+            }
+            return offset + cage.cellIdx;
+        }
+
+        const sorted = selected.slice().sort((a, b) => getAbsoluteIdx(a) - getAbsoluteIdx(b));
+        const indices = sorted.map(c => getAbsoluteIdx(c));
+
+        let isContiguous = true;
+        for (let i = 0; i < indices.length - 1; i++) {
+            if (indices[i+1] !== indices[i] + 1) { isContiguous = false; break; }
+        }
+
+        return { ok: isContiguous, cages: sorted };
+    }
+
+    // ─────────────────────────────────────────────
+    // 🔄 배치 모드 토글
+    // ─────────────────────────────────────────────
     function toggleBatchMode() {
         isBatchMode = !isBatchMode;
         const btn = document.getElementById('btn-batch');
         if (isBatchMode) {
             document.body.classList.add('batch-mode');
             btn.classList.add('btn-active');
-            btn.innerText = '✅ 선택 완료 (이제 이동가능)';
+            btn.innerText = '✅ 선택 완료';
+            batchMoveMode = false;
         } else {
             document.body.classList.remove('batch-mode');
             btn.classList.remove('btn-active');
             btn.innerText = '☑️ 일괄 선택';
             marquee.active = false;
+            batchMoveMode = false;
             document.getElementById('selection-marquee').style.display = 'none';
+            clearSelection();
         }
     }
 
-    // --- 🖱️ [수정됨] 완벽 분리된 허공 드래그(Marquee) 엔진 ---
+    // ─────────────────────────────────────────────
+    // 🚚 일괄 이동 버튼 클릭: 연속 선택된 케이지를
+    //    드래그 가능 상태로 전환
+    // ─────────────────────────────────────────────
+    function startBatchMove() {
+        const result = checkContiguous();
+        if (!result.ok) return;
+
+        // 배치 모드 해제하고 이동 대기 상태로 전환
+        batchMoveMode = true;
+        isBatchMode = false;
+        document.body.classList.remove('batch-mode');
+        const btn = document.getElementById('btn-batch');
+        btn.classList.remove('btn-active');
+        btn.innerText = '☑️ 일괄 선택';
+
+        // 안내 배지 업데이트
+        const bar = document.getElementById('batch-bar');
+        document.getElementById('batch-count').innerText = `${selectedIds.size}개 케이지 이동 준비됨`;
+        document.getElementById('contiguous-badge').className = 'contiguous-badge ok';
+        document.getElementById('contiguous-badge').innerText = '✦ 드래그하여 이동';
+        document.getElementById('btn-batch-move').style.display = 'none';
+        bar.classList.add('show');
+    }
+
+    // ─────────────────────────────────────────────
+    // 🔲 허공 Marquee 드래그 엔진 (누적 선택 지원)
+    // ─────────────────────────────────────────────
     document.addEventListener('pointerdown', (e) => {
         if (!isBatchMode) return; 
-        if (e.button !== 0 || e.target.closest('.cage') || e.target.closest('header') || e.target.closest('.map-nav') || e.target.closest('.modal') || e.target.closest('.batch-bar')) return;
+        if (e.button !== 0) return;
+        if (e.target.closest('.cage') || e.target.closest('header') || 
+            e.target.closest('.map-nav') || e.target.closest('.modal') || 
+            e.target.closest('.batch-bar')) return;
         
-        e.preventDefault(); // 💡 브라우저 기본 텍스트 선택(파란색 하이라이트) 방지
+        e.preventDefault();
 
         marquee.active = true;
         marquee.startX = e.clientX;
         marquee.startY = e.clientY;
-        
-        if (e.ctrlKey || e.metaKey || e.shiftKey) {
-            marquee.additive = true;
-            marquee.initial = new Set(selectedIds);
-        } else {
-            marquee.additive = false;
-            clearSelection();
-        }
+        // ✅ 수정: 항상 누적 모드 — 기존 선택을 초기화하지 않음
+        marquee.initialSelected = new Set(selectedIds);
 
         const box = document.getElementById('selection-marquee');
         box.style.display = 'block';
@@ -435,7 +471,6 @@
         box.style.width = '0px';
         box.style.height = '0px';
 
-        // 💡 허공 드래그 전용 추적기 부착
         document.addEventListener('pointermove', onMarqueeMove);
         document.addEventListener('pointerup', onMarqueeUp);
     });
@@ -451,14 +486,17 @@
         box.style.left = x + 'px'; box.style.top = y + 'px';
         box.style.width = w + 'px'; box.style.height = h + 'px';
 
-        if (!marquee.additive) selectedIds.clear();
-        else selectedIds = new Set(marquee.initial);
+        // ✅ 수정: 이전 드래그로 선택된 것(initialSelected)을 유지하면서
+        //         현재 드래그 영역과 겹치는 케이지를 추가로 선택
+        const newSelected = new Set(marquee.initialSelected);
 
         document.querySelectorAll('#main-grid .cage').forEach(el => {
             const r = el.getBoundingClientRect();
             const intersect = !(r.right < x || r.left > x + w || r.bottom < y || r.top > y + h);
-            if (intersect) selectedIds.add(el.id);
+            if (intersect) newSelected.add(el.id);
         });
+
+        selectedIds = newSelected;
         updateSelectionUI();
     }
 
@@ -468,15 +506,20 @@
         document.getElementById('selection-marquee').style.display = 'none';
         document.removeEventListener('pointermove', onMarqueeMove);
         document.removeEventListener('pointerup', onMarqueeUp);
+        // 드래그 종료 후 연속성 체크하여 UI 업데이트
+        updateSelectionUI();
     }
 
-    // --- 🚀 케이지 드래그 앤 드롭 전용 엔진 ---
+    // ─────────────────────────────────────────────
+    // 🚀 케이지 드래그 앤 드롭 엔진
+    // ─────────────────────────────────────────────
     function setupDragEngine(cageEl, cageId) {
         cageEl.addEventListener('pointerdown', (e) => {
             if (e.button !== 0) return; 
             e.preventDefault();
-            e.stopPropagation(); // 💡 케이지 클릭 시 배경 드래그 발동 방지
+            e.stopPropagation();
 
+            // 일괄 선택 모드: 클릭으로 토글
             if (isBatchMode) {
                 if (selectedIds.has(cageId)) selectedIds.delete(cageId);
                 else selectedIds.add(cageId);
@@ -484,6 +527,44 @@
                 return; 
             }
 
+            // 일괄 이동 대기 모드: 선택된 케이지 중 하나를 드래그하면 전체 이동
+            if (batchMoveMode && selectedIds.has(cageId)) {
+                dragData.active = true;
+                dragData.isDragging = false;
+                dragData.startX = e.clientX;
+                dragData.startY = e.clientY;
+                dragData.primaryId = cageId;
+                dragData.items = [];
+
+                const result = checkContiguous();
+                if (result.ok && result.cages.length > 0) {
+                    // 현재 랙에 있는 선택된 케이지만 이동
+                    const currentRackSelected = result.cages
+                        .filter(c => c.rackId === currentRack)
+                        .sort((a, b) => a.cellIdx - b.cellIdx);
+
+                    if (currentRackSelected.length > 0) {
+                        dragData.blockOffset = currentRackSelected.findIndex(c => c.id === cageId);
+                        if (dragData.blockOffset === -1) dragData.blockOffset = 0;
+                        currentRackSelected.forEach(c => {
+                            let el = document.getElementById(c.id);
+                            if (!el) return;
+                            let rect = el.getBoundingClientRect();
+                            dragData.items.push({ id: c.id, el, shiftX: e.clientX - rect.left, shiftY: e.clientY - rect.top });
+                        });
+                    } else {
+                        initSingleDrag(cageEl, cageId, e);
+                    }
+                } else {
+                    initSingleDrag(cageEl, cageId, e);
+                }
+
+                document.addEventListener('pointermove', onPointerMove);
+                document.addEventListener('pointerup', onPointerUp);
+                return;
+            }
+
+            // 일반 모드: 단일/다중 드래그
             dragData.active = true;
             dragData.isDragging = false;
             dragData.startX = e.clientX;
@@ -506,7 +587,7 @@
                     selectedCages.forEach(c => {
                         let el = document.getElementById(c.id);
                         let rect = el.getBoundingClientRect();
-                        dragData.items.push({ id: c.id, el: el, shiftX: e.clientX - rect.left, shiftY: e.clientY - rect.top });
+                        dragData.items.push({ id: c.id, el, shiftX: e.clientX - rect.left, shiftY: e.clientY - rect.top });
                     });
                 } else {
                     initSingleDrag(cageEl, cageId, e); 
@@ -654,8 +735,11 @@
         document.removeEventListener('pointerup', onPointerUp);
 
         if (!dragData.isDragging) {
-            clearSelection();
-            openModal(dragData.primaryId);
+            // 일괄 이동 대기 모드일 때는 클릭해도 모달 안 열림
+            if (!batchMoveMode) {
+                clearSelection();
+                openModal(dragData.primaryId);
+            }
             return;
         }
 
@@ -685,25 +769,75 @@
                 });
             }
         }
-        clearSelection();
+
+        // 이동 완료 후 일괄 이동 모드 해제
+        if (batchMoveMode) {
+            batchMoveMode = false;
+            clearSelection();
+        } else {
+            clearSelection();
+        }
+
         renderMainBoard();
         document.querySelectorAll('.map-rack').forEach(el => el.classList.remove('drag-over'));
     }
 
-    // --- 🪄 UI 업데이트 및 기본 시스템 함수들 ---
+    // ─────────────────────────────────────────────
+    // 🪄 UI 업데이트
+    // ─────────────────────────────────────────────
     function updateSelectionUI() {
         document.querySelectorAll('.cage').forEach(el => {
             if (selectedIds.has(el.id)) el.classList.add('selected');
             else el.classList.remove('selected');
         });
+
         const bar = document.getElementById('batch-bar');
-        document.getElementById('batch-count').innerText = `${selectedIds.size}개 케이지 선택됨`;
-        if (selectedIds.size > 0) bar.classList.add('show');
-        else bar.classList.remove('show');
+        const badge = document.getElementById('contiguous-badge');
+        const moveBtn = document.getElementById('btn-batch-move');
+        const batchBtn = document.getElementById('btn-batch');
+
+        if (selectedIds.size > 0 && !batchMoveMode) {
+            bar.classList.add('show');
+            document.getElementById('batch-count').innerText = `${selectedIds.size}개 케이지 선택됨`;
+
+            const result = checkContiguous();
+            if (result.ok) {
+                // ✅ 연속 선택: 이동 버튼 활성화, 배치 버튼도 정상
+                badge.className = 'contiguous-badge ok';
+                badge.innerText = '✦ 연속 배치 (이동 가능)';
+                moveBtn.style.display = '';
+                moveBtn.removeAttribute('disabled');
+                batchBtn.removeAttribute('disabled');
+            } else {
+                // ❌ 비연속 선택: 이동 버튼 비활성화, 배치 버튼도 비활성화
+                badge.className = 'contiguous-badge ng';
+                badge.innerText = '✕ 비연속 (이동 불가)';
+                moveBtn.setAttribute('disabled', true);
+                batchBtn.setAttribute('disabled', true);
+            }
+        } else if (selectedIds.size === 0 && !batchMoveMode) {
+            bar.classList.remove('show');
+            badge.className = 'contiguous-badge';
+            badge.innerText = '';
+            batchBtn.removeAttribute('disabled');
+            moveBtn.style.display = '';
+        }
     }
 
     function clearSelection() {
-        selectedIds.clear(); updateSelectionUI();
+        selectedIds.clear();
+        batchMoveMode = false;
+        document.getElementById('btn-batch-move').style.display = '';
+
+        // 배치 모드 버튼 상태 복원
+        const batchBtn = document.getElementById('btn-batch');
+        batchBtn.removeAttribute('disabled');
+        if (!isBatchMode) {
+            batchBtn.classList.remove('btn-active');
+            batchBtn.innerText = '☑️ 일괄 선택';
+        }
+
+        updateSelectionUI();
     }
 
     function deleteSelectedCages() {
@@ -712,6 +846,9 @@
         clearSelection(); renderMainBoard(); buildLeftSidebar();
     }
 
+    // ─────────────────────────────────────────────
+    // 📋 메인 보드 렌더링
+    // ─────────────────────────────────────────────
     function renderMainBoard() {
         const grid = document.getElementById('main-grid');
         document.getElementById('current-rack-title').innerText = `Rack ${currentRack}`;
@@ -731,7 +868,7 @@
             const rChar = String.fromCharCode(64 + Math.floor(i / 7) + 1);
             slot.setAttribute('data-label', `${rChar}-${(i % 7) + 1}`);
             slot.dataset.idx = i;
-            slot.onclick = () => { clearSelection(); openModal(null, i); };
+            slot.onclick = () => { if (!isBatchMode && !batchMoveMode) { clearSelection(); openModal(null, i); } };
             slotsFragment.appendChild(slot);
         }
         grid.prepend(slotsFragment);
@@ -868,6 +1005,6 @@
 
     buildLeftSidebar();
     renderMainBoard();
-    </script>
+</script>
 </body>
 </html>
