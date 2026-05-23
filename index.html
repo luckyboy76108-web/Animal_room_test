@@ -82,28 +82,27 @@
         .map-rack h3 { margin: 0 0 5px 0; font-size: 16px; font-weight: 600; }
         .map-rack p { margin: 0; font-size: 12px; color: var(--text-sub); }
         .map-rack.drag-over { background: rgba(52, 199, 89, 0.15); border-color: #34c759; transform: scale(1.03); }
+        /* --- 💡 도면 내 요소 정밀 배치 좌표 수정 --- */
 
-        /* 1행 (A, B) - 상단 영역 */
+        /* 1행: A (좌), B (우) - 상단 고정 */
         .rack-A { top: 15px; left: 15px; width: 80px; height: 110px; }
         .rack-B { top: 15px; right: 15px; width: 80px; height: 110px; }
         
-        /* 2행 (Change Station) - 중앙-우측 */
+        /* 2행: C (좌) 🟢 이 부분이 수정되었습니다. Change Station과 나란히 배치 */
+        .rack-C { top: 140px; left: 15px; width: 80px; height: 110px; }
+
+        /* 2행: Change Station (우) */
         .change-station {
             position: absolute; top: 140px; right: 15px; width: 80px; height: 110px;
             border: 1px dashed rgba(255,255,255,0.12); background: rgba(255,255,255,0.01);
             border-radius: 12px; display: flex; align-items: center; justify-content: center;
             font-size: 12px; color: var(--text-sub); text-align: center; line-height: 1.4; font-weight: 600;
         }
-
-        /* 💡 수정됨: 하단 하단 영역 랙 (C, D, E) 정렬 */
-        /* C 랙 - 하단 왼쪽 고정폭 */
-        .rack-C { top: 265px; left: 15px; width: 80px; height: 80px; /* C는 하단 영역 왼쪽 */ }
-
-        /* D 랙 - C 옆, 가로 꽉 차는 형태 */
-        .rack-D { top: 265px; left: 110px; right: 15px; height: 32px; width: auto; /* width: auto로 박스 이탈 방지 */ }
         
-        /* E 랙 - D 옆, 가로 꽉 차는 형태 */
-        .rack-E { top: 310px; left: 110px; right: 15px; height: 32px; width: auto; /* width: auto로 박스 이탈 방지 */ }  
+        /* 3행, 4행: D, E - 하단 가로 배치 (왼쪽 여백 확보 및 너비 축소) */
+        /* left를 85px로 늘려 왼쪽 공간을 비우고, 너비를 180px 정도로 고정합니다. */
+        .rack-D { top: 265px; left: 85px; width: 180px; height: 32px; }
+        .rack-E { top: 310px; left: 85px; width: 180px; height: 32px; }
         /* 오른쪽: 메인 격자 보드 */
         .board-pane { flex: 1; padding: 30px; display: flex; flex-direction: column; justify-content: flex-start; align-items: flex-start; overflow: auto; box-sizing: border-box; }
         .board-header { margin-bottom: 20px; }
