@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Rack OS v8.1 - Absolute Precision Pro</title>
+    <title>Smart Rack OS v8.2 - Absolute Precision Pro</title>
     <style>
         :root {
             --breeding-color: #ffffff;
@@ -221,12 +221,30 @@
             filter: brightness(0.4) opacity(0.6);
             transform: scale(0.95);
         }
+
+        /* 오버플로우 경고 모달 진입 애니메이션 */
+        #overflow-modal .modal {
+            animation: overflowPop 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+        @keyframes overflowPop {
+            from { transform: scale(0.88) translateY(12px); opacity: 0; }
+            to   { transform: scale(1) translateY(0); opacity: 1; }
+        }
+
+        /* ghost-slot 빨간 펄스 강조 (오버플로우 상태에서 눈에 띄게) */
+        .slot.ghost-slot {
+            animation: ghostPulse 2s ease-in-out infinite;
+        }
+        @keyframes ghostPulse {
+            0%, 100% { border-color: rgba(255, 55, 95, 0.35); background: rgba(255, 55, 95, 0.02); }
+            50%       { border-color: rgba(255, 55, 95, 0.7);  background: rgba(255, 55, 95, 0.07); }
+        }
     </style>
 </head>
 <body>
 
 <header>
-    <h1>Smart Rack OS <span style="font-size:14px; color:var(--mating-color); font-weight:bold; margin-left:6px;">v8.1 Absolute Precision</span></h1>
+    <h1>Smart Rack OS <span style="font-size:14px; color:var(--mating-color); font-weight:bold; margin-left:6px;">v8.2 Absolute Precision</span></h1>
     <div class="top-right">
         <div class="progress-text">공간 사용률: <span id="occupancy-label">0%</span></div>
         <div class="progress-container"><div class="progress-bar" id="occupancy-bar"></div></div>
@@ -328,6 +346,25 @@
 
 <div id="selection-marquee"></div>
 
+<!-- ⚠️ 오버플로우 경고 모달 -->
+<div class="modal-overlay" id="overflow-modal" style="z-index:3500;">
+    <div class="modal" style="max-width:420px;">
+        <div style="display:flex; align-items:center; gap:14px; margin-bottom:18px;">
+            <div style="width:48px;height:48px;border-radius:14px;background:rgba(255,159,10,0.15);border:1px solid rgba(255,159,10,0.4);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;">⚠️</div>
+            <div>
+                <h2 id="overflow-modal-title" style="margin:0 0 4px 0;font-size:18px;font-weight:700;">랙 용량 초과</h2>
+                <p id="overflow-modal-sub" style="margin:0;font-size:12px;color:var(--text-sub);line-height:1.5;"></p>
+            </div>
+        </div>
+        <div id="overflow-detail" style="background:rgba(255,159,10,0.07);border:1px solid rgba(255,159,10,0.25);border-radius:14px;padding:14px 16px;margin-bottom:20px;font-size:13px;line-height:1.8;"></div>
+        <div style="font-size:12px;color:var(--text-sub);margin-bottom:20px;line-height:1.6;">빨간 테두리(<span style="color:#FF375F;">ghost</span>) 슬롯으로 밀려난 케이지를 먼저 안쪽으로 이동하거나 삭제한 뒤 다시 시도하세요.</div>
+        <div class="modal-btns" style="margin-top:0;">
+            <button class="btn" style="background:#FF375F;color:white;margin-right:auto;" onclick="goToOverflowRack()">🔍 해당 랙 바로가기</button>
+            <button class="btn btn-cancel" onclick="closeOverflowModal()">닫기</button>
+        </div>
+    </div>
+</div>
+
 <!-- 일괄 작업 바 (연속성 상태 뱃지 포함) -->
 <div class="batch-bar" id="batch-bar">
     <span class="batch-count" id="batch-count">0개 선택됨</span>
@@ -361,7 +398,74 @@
     let dragData = { active: false, isDragging: false, items: [], primaryId: null, blockOffset: 0, startX: 0, startY: 0 };
     let marquee = { active: false, startX: 0, startY: 0 };
     let currentHoverIdx = -1;
-    let batchMoveMode = false; // 일괄 이동 대기 상태
+    let batchMoveMode = false;
+    let overflowTargetRack = null; // 경고 모달에서 바로가기용
+
+    // ─────────────────────────────────────────────
+    // ⚠️ 오버플로우 감지 및 경고 시스템
+    // ─────────────────────────────────────────────
+
+    /**
+     * 모든 랙의 오버플로우 상태를 반환
+     * 오버플로우 = 해당 랙의 baseCapacity(RACK_ROWS[r]*7) 를 초과하는 cellIdx 를 가진 케이지 존재
+     */
+    function getOverflowStatus() {
+        const overflowed = [];
+        for (const rName of Object.keys(RACK_ROWS)) {
+            const cap = RACK_ROWS[rName] * 7;
+            const overCages = cages.filter(c => c.rackId === rName && c.cellIdx >= cap);
+            if (overCages.length > 0) {
+                overflowed.push({ rack: rName, count: overCages.length, capacity: cap, overCages });
+            }
+        }
+        return overflowed; // 빈 배열이면 오버플로우 없음
+    }
+
+    /**
+     * 오버플로우가 있으면 경고 모달을 띄우고 true 반환 (동작 차단)
+     * actionName: 어떤 동작을 하려 했는지 표시용 문자열
+     * targetRack: 특정 랙 오버플로우만 체크할 때 (null이면 전체)
+     */
+    function checkOverflowAndWarn(actionName = '이 작업', targetRack = null) {
+        const all = getOverflowStatus();
+        const relevant = targetRack ? all.filter(o => o.rack === targetRack) : all;
+        if (relevant.length === 0) return false; // 이상 없음
+
+        // 모달 내용 구성
+        const rackList = relevant.map(o => {
+            const names = o.overCages.map(c => `<span style="color:#ffcc00;font-weight:700;">${c.id}</span>`).join(', ');
+            return `<div style="margin-bottom:6px;">
+                <strong style="color:white;">Rack ${o.rack}</strong>
+                <span style="color:var(--text-sub);"> — </span>
+                <span style="color:#FF375F;font-weight:700;">${o.count}개 초과</span>
+                <span style="color:var(--text-sub);font-size:11px;"> (정원 ${o.capacity}칸)</span><br>
+                <span style="font-size:11px;color:var(--text-sub);">초과 케이지: ${names}</span>
+            </div>`;
+        }).join('');
+
+        document.getElementById('overflow-modal-title').innerText = '용량 초과 케이지 해결 필요';
+        document.getElementById('overflow-modal-sub').innerText =
+            `${actionName}을 진행하기 전에 빨간 슬롯으로 밀려난 케이지를 먼저 처리해야 합니다.`;
+        document.getElementById('overflow-detail').innerHTML = rackList;
+
+        // 바로가기 버튼: 오버플로우가 있는 첫 번째 랙으로
+        overflowTargetRack = relevant[0].rack;
+        document.getElementById('overflow-modal').style.display = 'flex';
+        return true; // 동작 차단
+    }
+
+    function closeOverflowModal() {
+        document.getElementById('overflow-modal').style.display = 'none';
+    }
+
+    function goToOverflowRack() {
+        closeOverflowModal();
+        if (overflowTargetRack) {
+            currentRack = overflowTargetRack;
+            buildLeftSidebar();
+            renderMainBoard();
+        }
+    }
 
     // ─────────────────────────────────────────────
     // 📐 연속성 체크: 현재 랙 내 선택된 케이지들이
@@ -403,6 +507,9 @@
     // 🔄 배치 모드 토글
     // ─────────────────────────────────────────────
     function toggleBatchMode() {
+        // 일괄 선택 모드 진입 시 오버플로우 체크
+        if (!isBatchMode && checkOverflowAndWarn('일괄 선택')) return;
+
         isBatchMode = !isBatchMode;
         const btn = document.getElementById('btn-batch');
         if (isBatchMode) {
@@ -426,6 +533,7 @@
     //    드래그 가능 상태로 전환
     // ─────────────────────────────────────────────
     function startBatchMove() {
+        if (checkOverflowAndWarn('일괄 이동')) return;
         const result = checkContiguous();
         if (!result.ok) return;
 
@@ -526,6 +634,9 @@
                 updateSelectionUI();
                 return; 
             }
+
+            // 드래그 시작 전 오버플로우 체크 (현재 랙 기준)
+            if (checkOverflowAndWarn('케이지 이동', currentRack)) return;
 
             // 일괄 이동 대기 모드: 선택된 케이지 중 하나를 드래그하면 전체 이동
             if (batchMoveMode && selectedIds.has(cageId)) {
@@ -841,6 +952,7 @@
     }
 
     function deleteSelectedCages() {
+        if (checkOverflowAndWarn('일괄 삭제')) return;
         if (!confirm(`선택한 ${selectedIds.size}개의 케이지를 모두 삭제하시겠습니까?`)) return;
         cages = cages.filter(c => !selectedIds.has(c.id));
         clearSelection(); renderMainBoard(); buildLeftSidebar();
@@ -930,6 +1042,9 @@
     let targetSlotIdxForCreate = null;
 
     function openModal(cageId, slotIdx = null) {
+        // 신규 등록 시 오버플로우 체크 (편집은 항상 허용)
+        if (!cageId && checkOverflowAndWarn('신규 케이지 등록')) return;
+
         if (cageId) {
             const c = cages.find(x => x.id === cageId);
             document.getElementById('modal-title').innerText = "케이지 데이터 편집"; document.getElementById('m-id').value = c.id;
@@ -986,6 +1101,7 @@
     function toggleMatchPanel() { document.getElementById('match-panel').classList.toggle('open'); }
     function openMatchPanel(e) {
         e.stopPropagation();
+        if (checkOverflowAndWarn('Strain 매칭표 편집')) return;
         const listContainer = document.getElementById('mapping-list'); listContainer.innerHTML = '';
         for(const [key, val] of Object.entries(STRAIN_MAP)) {
             const row = document.createElement('div'); row.className = 'match-row';
