@@ -665,8 +665,24 @@
         }
     }
 
-    function closeModal() { modal.style.display = 'none'; }
+    function closeModal() { 
+        modal.style.display = 'none'; 
+        // 💡 [버그 해결] 모달이 닫힐 때 작업 중이던 케이지 ID 메모리를 완전히 리셋합니다.
+        dragData.id = null; 
+    }
 
+    function deleteCage() {
+        const targetId = document.getElementById('m-id').value;
+        cages = cages.filter(c => c.id !== targetId);
+        
+        // 💡 [버그 해결] 삭제된 케이지 ID가 남아있어 화면 갱신을 방해하던 문제를 차단합니다.
+        if (dragData.id === targetId) dragData.id = null;
+        
+        closeModal(); 
+        renderMainBoard(); 
+        buildLeftSidebar();
+    }
+    
     function saveCage() {
         const id = document.getElementById('m-id').value;
         const info = {
@@ -683,11 +699,6 @@
         if (id) { Object.assign(cages.find(x => x.id === id), info); } 
         else { cages.push({ id: 'c_' + Date.now(), rackId: currentRack, cellIdx: targetSlotIdxForCreate, ...info }); }
         
-        closeModal(); renderMainBoard(); buildLeftSidebar();
-    }
-
-    function deleteCage() {
-        cages = cages.filter(c => c.id !== document.getElementById('m-id').value);
         closeModal(); renderMainBoard(); buildLeftSidebar();
     }
 
