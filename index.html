@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Rack OS v8.4 - Absolute Precision Pro</title>
+    <title>Smart Rack OS v8.5 - Absolute Precision Pro</title>
     <style>
         :root {
             --breeding-color: #ffffff;
@@ -141,7 +141,6 @@
         }
         .side-panel.open { right: 0; }
         .side-panel h2 { font-size: 22px; margin-top: 0; margin-bottom: 25px; }
-        
         .match-row { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
 
         .modal-overlay {
@@ -149,10 +148,14 @@
             background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); z-index: 2000;
             display: none; justify-content: center; align-items: center;
         }
+        /* 💡 수정됨: 모달 높이 제한 및 스크롤 디자인 추가 */
         .modal {
             background: rgba(28, 28, 35, 0.95); border: 1px solid var(--glass-border); border-radius: 28px;
-            width: 440px; padding: 35px; box-shadow: 0 40px 80px rgba(0,0,0,0.6); box-sizing: border-box;
+            width: 440px; max-height: 90vh; overflow-y: auto; padding: 35px; box-shadow: 0 40px 80px rgba(0,0,0,0.6); box-sizing: border-box;
         }
+        .modal::-webkit-scrollbar { width: 6px; }
+        .modal::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 3px; }
+        
         .modal h2 { margin-top: 0; margin-bottom: 20px; font-size: 22px; font-weight: 700; }
         .form-group { margin-bottom: 14px; }
         .form-group label { display: block; font-size: 12px; color: var(--text-sub); margin-bottom: 5px; font-weight: 600; }
@@ -167,19 +170,22 @@
         .btn-save { background: #ffcc00; color: #1c1c1e; }
         .btn-delete { background: #FF375F; color: white; margin-right: auto; }
 
+        .btn-today {
+            background: rgba(10, 132, 255, 0.15); color: #0a84ff; border: 1px solid rgba(10, 132, 255, 0.3);
+            border-radius: 8px; padding: 0 10px; font-weight: 700; cursor: pointer; transition: 0.2s;
+        }
+        .btn-today:hover { background: #0a84ff; color: white; }
+
         #selection-marquee {
             position: fixed; display: none; z-index: 9999; pointer-events: none;
             background: rgba(10, 132, 255, 0.2); border: 1px solid rgba(10, 132, 255, 0.8);
             border-radius: 4px; backdrop-filter: blur(2px);
         }
-        
         .cage.selected {
             filter: brightness(0.4) saturate(1.2);
             border: 2px solid #FF375F !important;
-            transform: scale(0.95);
-            box-shadow: 0 0 15px rgba(255, 55, 95, 0.4);
+            transform: scale(0.95); box-shadow: 0 0 15px rgba(255, 55, 95, 0.4);
         }
-
         .drag-badge {
             position: absolute; top: -10px; right: -10px;
             background: #FF375F; color: white; font-size: 14px; font-weight: bold;
@@ -187,23 +193,19 @@
             display: flex; align-items: center; justify-content: center;
             box-shadow: 0 4px 10px rgba(255, 55, 95, 0.5); z-index: 10000;
         }
-
-        /* 일괄 작업 플로팅 바 */
         .batch-bar {
             position: fixed; bottom: -120px; left: 50%; transform: translateX(-50%);
             background: rgba(28, 28, 35, 0.95); backdrop-filter: blur(30px);
             border: 1px solid var(--glass-border); border-radius: 20px;
             padding: 15px 25px; display: flex; align-items: center; gap: 16px;
             box-shadow: 0 20px 50px rgba(0,0,0,0.8); z-index: 3000;
-            transition: bottom 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
-            white-space: nowrap;
+            transition: bottom 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); white-space: nowrap;
         }
         .batch-bar.show { bottom: 40px; }
         .batch-count { font-weight: 700; color: #ffcc00; font-size: 15px; letter-spacing: -0.5px; }
 
         .contiguous-badge {
-            font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 8px;
-            display: flex; align-items: center; gap: 5px;
+            font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 8px; display: flex; align-items: center; gap: 5px;
         }
         .contiguous-badge.ok { background: rgba(52, 199, 89, 0.2); color: #34c759; border: 1px solid rgba(52,199,89,0.4); }
         .contiguous-badge.ng { background: rgba(255, 55, 95, 0.15); color: #FF375F; border: 1px solid rgba(255,55,95,0.3); }
@@ -212,7 +214,6 @@
             background: #0a84ff !important; color: white !important;
             border-color: #0a84ff !important; box-shadow: 0 0 15px rgba(10, 132, 255, 0.4);
         }
-        
         body.batch-mode .cage { transition: filter 0.3s, transform 0.3s; }
         body.batch-mode .cage:not(.selected) { filter: brightness(0.4) opacity(0.6); transform: scale(0.95); }
 
@@ -251,7 +252,7 @@
 <body>
 
 <header>
-    <h1>Smart Rack OS <span style="font-size:14px; color:var(--mating-color); font-weight:bold; margin-left:6px;">v8.4 Absolute Precision</span></h1>
+    <h1>Smart Rack OS <span style="font-size:14px; color:var(--mating-color); font-weight:bold; margin-left:6px;">v8.5 Absolute Precision</span></h1>
     <div class="top-right">
         <div class="progress-text">공간 사용률: <span id="occupancy-label">0%</span></div>
         <div class="progress-container"><div class="progress-bar" id="occupancy-bar"></div></div>
@@ -265,10 +266,8 @@
     <div class="map-nav">
         <div class="section-title">랙 줄 수 세부 설정</div>
         <div class="config-box" id="config-box"></div>
-        
         <div style="border-bottom: 1px solid var(--glass-border); margin: 5px 0;"></div>
         <div class="section-title">연구실 배치 도면 (클릭하여 전환)</div>
-        
         <div class="room-map" id="room-map">
             <div class="map-rack rack-A" data-rack="A" id="map-A">A</div>
             <div class="map-rack rack-B" data-rack="B" id="map-B">B</div>
@@ -284,7 +283,6 @@
             <h2 class="board-title" id="current-rack-title">Rack A</h2>
             <div class="board-desc" id="current-rack-desc">계산 중...</div>
         </div>
-        
         <div class="grid-container">
             <div class="grid-7" id="main-grid"></div>
         </div>
@@ -305,40 +303,79 @@
         <input type="hidden" id="m-id">
         
         <div class="form-group">
-            <label>용도 구분</label>
+            <label>용도 구분 (Mating / Breeding)</label>
             <select id="m-type" class="form-control" onchange="toggleModalFields()">
-                <option value="breeding">Breeding (생산용 - 흰색)</option>
+                <option value="breeding">Breeding (생산/유지용 - 흰색)</option>
                 <option value="mating">Mating (교배용 - 노란색)</option>
             </select>
         </div>
         <div class="form-row">
             <div class="form-group" style="flex:1;">
-                <label>표시 알파벳 기호</label>
-                <input type="text" id="m-code" class="form-control" placeholder="예: A, C">
+                <label>알파벳 기호</label>
+                <input type="text" id="m-code" class="form-control" placeholder="A, C" oninput="updateGenotypeDisplay()" maxlength="2">
+                <div id="genotype-display" style="font-size:11px; color:#ffcc00; margin-top:5px; font-weight:600;">Genotype: 매칭 안됨</div>
             </div>
             <div class="form-group" style="flex:1;">
-                <label id="sub-label">서브 번호/마리수</label>
-                <input type="text" id="m-sub" class="form-control" placeholder="A52형태 자동 연산">
+                <label>케이지 번호</label>
+                <input type="text" id="m-sub" class="form-control" placeholder="예: 52 (없으면 비움)">
             </div>
         </div>
-        <div class="form-row">
-            <div class="form-group" style="flex:1;">
-                <label>암컷 수 (♀)</label>
-                <input type="number" id="m-female" class="form-control" value="0" min="0">
+        
+        <div id="mating-fields" style="display:none; background:rgba(255,214,10,0.05); padding:15px; border-radius:12px; border:1px solid rgba(255,214,10,0.2); margin-bottom:14px;">
+            <div class="form-group">
+                <label>DOM (교배일)</label>
+                <div style="display:flex; gap:8px;">
+                    <input type="date" id="m-dom" class="form-control">
+                    <button type="button" class="btn-today" onclick="setToday('m-dom')">Today</button>
+                </div>
             </div>
-            <div class="form-group" style="flex:1;">
-                <label>수컷 수 (♂)</label>
-                <input type="number" id="m-male" class="form-control" value="0" min="0">
+            <div style="display:flex; gap:15px;">
+                <div style="flex:1; border-right:1px solid rgba(255,255,255,0.1); padding-right:15px;">
+                    <label style="color:#0a84ff; font-size:13px; margin-bottom:8px;">수컷 정보 (♂)</label>
+                    <input type="number" id="m-male-count" class="form-control" placeholder="마리수" style="margin-bottom:8px;" min="0">
+                    <input type="text" id="m-male-geno" class="form-control" placeholder="수컷 Genotype" style="margin-bottom:8px;">
+                    <div style="display:flex; gap:5px;">
+                        <input type="date" id="m-male-dob" class="form-control" style="font-size:12px; padding:8px;">
+                        <button type="button" class="btn-today" onclick="setToday('m-male-dob')">T</button>
+                    </div>
+                </div>
+                <div style="flex:1;">
+                    <label style="color:#FF375F; font-size:13px; margin-bottom:8px;">암컷 정보 (♀)</label>
+                    <input type="number" id="m-female-count" class="form-control" placeholder="마리수" style="margin-bottom:8px;" min="0">
+                    <input type="text" id="m-female-geno" class="form-control" placeholder="암컷 Genotype" style="margin-bottom:8px;">
+                    <div style="display:flex; gap:5px;">
+                        <input type="date" id="m-female-dob" class="form-control" style="font-size:12px; padding:8px;">
+                        <button type="button" class="btn-today" onclick="setToday('m-female-dob')">T</button>
+                    </div>
+                </div>
             </div>
         </div>
-        <div class="form-group" id="dob-group">
-            <label>DOB (출생일)</label>
-            <input type="date" id="m-dob" class="form-control">
+
+        <div id="breeding-fields" style="display:none; background:rgba(255,255,255,0.05); padding:15px; border-radius:12px; border:1px solid rgba(255,255,255,0.1); margin-bottom:14px;">
+            <div class="form-row">
+                <div class="form-group" style="flex:1;">
+                    <label>성별</label>
+                    <select id="b-gender" class="form-control">
+                        <option value="male">수컷 (♂)</option>
+                        <option value="female">암컷 (♀)</option>
+                        <option value="mixed">암수혼합</option>
+                        <option value="unknown">미상</option>
+                    </select>
+                </div>
+                <div class="form-group" style="flex:1;">
+                    <label>마리수</label>
+                    <input type="number" id="b-count" class="form-control" min="0" value="1">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>DOB (출생일)</label>
+                <div style="display:flex; gap:8px;">
+                    <input type="date" id="b-dob" class="form-control">
+                    <button type="button" class="btn-today" onclick="setToday('b-dob')">Today</button>
+                </div>
+            </div>
         </div>
-        <div class="form-group" id="dom-group">
-            <label>DOM (교배일)</label>
-            <input type="date" id="m-dom" class="form-control">
-        </div>
+
         <div class="form-group">
             <label>특이사항 (Notes)</label>
             <textarea id="m-notes" class="form-control" rows="2"></textarea>
@@ -378,18 +415,27 @@
     let currentRack = 'A';
     let STRAIN_MAP = { 'A': 'K18-hACE2', 'C': 'Aim2', 'W': 'Wild Type' };
 
+    // 💡 신규 데이터 스키마에 맞춘 테스트용 데이터 100% 생성
     let cages = [];
     ['A', 'B', 'C'].forEach(rack => {
         for(let i=0; i<35; i++) {
+            let isMating = (i % 3 === 0);
             cages.push({ 
-                id: `${rack}_${i}`, rackId: rack, cellIdx: i, 
-                type: i % 3 === 0 ? 'mating' : 'breeding', 
-                code: rack === 'B' ? 'C' : 'A', subId: `-${i+1}`, female: 1, male: 1 
+                id: `${rack}_${i}`, rackId: rack, cellIdx: i, type: isMating ? 'mating' : 'breeding', 
+                code: rack === 'B' ? 'C' : 'A', subId: isMating ? `${i+1}` : `-${i+1}`, notes: '',
+                // Mating Fields
+                dom: isMating ? '2026-05-10' : '', mMale: isMating ? 1 : 0, mGeno: '', mDob: '', mFemale: isMating ? 2 : 0, fGeno: '', fDob: '',
+                // Breeding Fields
+                gender: isMating ? '' : 'female', bCount: isMating ? 0 : 3, bDob: isMating ? '' : '2026-04-01'
             });
         }
     });
     for(let i=0; i<8; i++) {
-        cages.push({ id: `D_${i}`, rackId: 'D', cellIdx: i, type: 'breeding', code: 'W', subId: `${i+1}`, female: 2, male: 0 });
+        cages.push({ 
+            id: `D_${i}`, rackId: 'D', cellIdx: i, type: 'breeding', code: 'W', subId: `${i+1}`, notes: '',
+            dom: '', mMale: 0, mGeno: '', mDob: '', mFemale: 0, fGeno: '', fDob: '',
+            gender: 'male', bCount: 2, bDob: ''
+        });
     }
 
     let isBatchMode = false;
@@ -404,7 +450,6 @@
     // --- 패널 및 외부 클릭 닫기 이벤트 ---
     document.addEventListener('pointerdown', (e) => {
         const matchPanel = document.getElementById('match-panel');
-        // Match 패널 밖을 클릭하면 저장 및 닫기
         if (matchPanel.classList.contains('open') && !matchPanel.contains(e.target) && !e.target.closest('header')) {
             saveAndCloseMatchPanel();
             return;
@@ -412,12 +457,9 @@
 
         if (!isBatchMode) return; 
         if (e.button !== 0) return;
-        if (e.target.closest('.cage') || e.target.closest('header') || 
-            e.target.closest('.map-nav') || e.target.closest('.modal') || 
-            e.target.closest('.batch-bar')) return;
+        if (e.target.closest('.cage') || e.target.closest('header') || e.target.closest('.map-nav') || e.target.closest('.modal') || e.target.closest('.batch-bar')) return;
         
         e.preventDefault();
-
         marquee.active = true;
         marquee.startX = e.clientX;
         marquee.startY = e.clientY;
@@ -425,10 +467,8 @@
 
         const box = document.getElementById('selection-marquee');
         box.style.display = 'block';
-        box.style.left = e.clientX + 'px';
-        box.style.top = e.clientY + 'px';
-        box.style.width = '0px';
-        box.style.height = '0px';
+        box.style.left = e.clientX + 'px'; box.style.top = e.clientY + 'px';
+        box.style.width = '0px'; box.style.height = '0px';
 
         document.addEventListener('pointermove', onMarqueeMove);
         document.addEventListener('pointerup', onMarqueeUp);
@@ -457,7 +497,6 @@
             overflowRackQueue = [];
             return;
         }
-
         document.body.classList.add('overflow-alert');
         banner.classList.add('show');
         overflowRackQueue = all.map(o => o.rack);
@@ -468,8 +507,7 @@
         if (overflowRackQueue.length === 0) return;
         const idx = overflowRackQueue.indexOf(currentRack);
         currentRack = overflowRackQueue[(idx + 1) % overflowRackQueue.length];
-        buildLeftSidebar();
-        renderMainBoard();
+        buildLeftSidebar(); renderMainBoard();
     }
 
     function blockIfOverflow() { return isOverflowing(); }
@@ -492,12 +530,10 @@
 
         const sorted = selected.slice().sort((a, b) => getAbsoluteIdx(a) - getAbsoluteIdx(b));
         const indices = sorted.map(c => getAbsoluteIdx(c));
-
         let isContiguous = true;
         for (let i = 0; i < indices.length - 1; i++) {
             if (indices[i+1] !== indices[i] + 1) { isContiguous = false; break; }
         }
-
         return { ok: isContiguous, cages: sorted };
     }
 
@@ -513,8 +549,7 @@
             document.body.classList.remove('batch-mode');
             btn.classList.remove('btn-active');
             btn.innerText = '☑️ 일괄 선택';
-            marquee.active = false;
-            batchMoveMode = false;
+            marquee.active = false; batchMoveMode = false;
             document.getElementById('selection-marquee').style.display = 'none';
             clearSelection();
         }
@@ -524,12 +559,10 @@
         const result = checkContiguous();
         if (!result.ok) return;
 
-        batchMoveMode = true;
-        isBatchMode = false;
+        batchMoveMode = true; isBatchMode = false;
         document.body.classList.remove('batch-mode');
         const btn = document.getElementById('btn-batch');
-        btn.classList.remove('btn-active');
-        btn.innerText = '☑️ 일괄 선택';
+        btn.classList.remove('btn-active'); btn.innerText = '☑️ 일괄 선택';
 
         const bar = document.getElementById('batch-bar');
         document.getElementById('batch-count').innerText = `${selectedIds.size}개 케이지 이동 준비됨`;
@@ -542,23 +575,17 @@
     function onMarqueeMove(e) {
         if (!marquee.active) return;
         const box = document.getElementById('selection-marquee');
-        const x = Math.min(e.clientX, marquee.startX);
-        const y = Math.min(e.clientY, marquee.startY);
-        const w = Math.abs(e.clientX - marquee.startX);
-        const h = Math.abs(e.clientY - marquee.startY);
-        
-        box.style.left = x + 'px'; box.style.top = y + 'px';
-        box.style.width = w + 'px'; box.style.height = h + 'px';
+        const x = Math.min(e.clientX, marquee.startX); const y = Math.min(e.clientY, marquee.startY);
+        const w = Math.abs(e.clientX - marquee.startX); const h = Math.abs(e.clientY - marquee.startY);
+        box.style.left = x + 'px'; box.style.top = y + 'px'; box.style.width = w + 'px'; box.style.height = h + 'px';
 
         const newSelected = new Set(marquee.initialSelected);
         document.querySelectorAll('#main-grid .cage').forEach(el => {
             const r = el.getBoundingClientRect();
-            const intersect = !(r.right < x || r.left > x + w || r.bottom < y || r.top > y + h);
-            if (intersect) newSelected.add(el.id);
+            if (!(r.right < x || r.left > x + w || r.bottom < y || r.top > y + h)) newSelected.add(el.id);
         });
 
-        selectedIds = newSelected;
-        updateSelectionUI();
+        selectedIds = newSelected; updateSelectionUI();
     }
 
     function onMarqueeUp(e) {
@@ -573,30 +600,22 @@
     function setupDragEngine(cageEl, cageId) {
         cageEl.addEventListener('pointerdown', (e) => {
             if (e.button !== 0) return; 
-            e.preventDefault();
-            e.stopPropagation();
+            e.preventDefault(); e.stopPropagation();
 
             if (isBatchMode) {
                 if (selectedIds.has(cageId)) selectedIds.delete(cageId);
                 else selectedIds.add(cageId);
-                updateSelectionUI();
-                return; 
+                updateSelectionUI(); return; 
             }
 
             if (batchMoveMode && selectedIds.has(cageId)) {
-                dragData.active = true;
-                dragData.isDragging = false;
-                dragData.startX = e.clientX;
-                dragData.startY = e.clientY;
-                dragData.primaryId = cageId;
-                dragData.items = [];
+                dragData.active = true; dragData.isDragging = false;
+                dragData.startX = e.clientX; dragData.startY = e.clientY;
+                dragData.primaryId = cageId; dragData.items = [];
 
                 const result = checkContiguous();
                 if (result.ok && result.cages.length > 0) {
-                    const currentRackSelected = result.cages
-                        .filter(c => c.rackId === currentRack)
-                        .sort((a, b) => a.cellIdx - b.cellIdx);
-
+                    const currentRackSelected = result.cages.filter(c => c.rackId === currentRack).sort((a, b) => a.cellIdx - b.cellIdx);
                     if (currentRackSelected.length > 0) {
                         dragData.blockOffset = currentRackSelected.findIndex(c => c.id === cageId);
                         if (dragData.blockOffset === -1) dragData.blockOffset = 0;
@@ -606,35 +625,23 @@
                             let rect = el.getBoundingClientRect();
                             dragData.items.push({ id: c.id, el, shiftX: e.clientX - rect.left, shiftY: e.clientY - rect.top });
                         });
-                    } else {
-                        initSingleDrag(cageEl, cageId, e);
-                    }
-                } else {
-                    initSingleDrag(cageEl, cageId, e);
-                }
+                    } else initSingleDrag(cageEl, cageId, e);
+                } else initSingleDrag(cageEl, cageId, e);
 
-                document.addEventListener('pointermove', onPointerMove);
-                document.addEventListener('pointerup', onPointerUp);
+                document.addEventListener('pointermove', onPointerMove); document.addEventListener('pointerup', onPointerUp);
                 return;
             }
 
-            dragData.active = true;
-            dragData.isDragging = false;
-            dragData.startX = e.clientX;
-            dragData.startY = e.clientY;
-            dragData.primaryId = cageId;
-            dragData.items = [];
+            dragData.active = true; dragData.isDragging = false;
+            dragData.startX = e.clientX; dragData.startY = e.clientY;
+            dragData.primaryId = cageId; dragData.items = [];
 
             if (!selectedIds.has(cageId)) {
-                clearSelection();
-                initSingleDrag(cageEl, cageId, e);
+                clearSelection(); initSingleDrag(cageEl, cageId, e);
             } else {
                 let selectedCages = cages.filter(c => selectedIds.has(c.id) && c.rackId === currentRack).sort((a, b) => a.cellIdx - b.cellIdx);
                 let isContiguous = true;
-                for (let i = 0; i < selectedCages.length - 1; i++) {
-                    if (selectedCages[i+1].cellIdx !== selectedCages[i].cellIdx + 1) { isContiguous = false; break; }
-                }
-
+                for (let i = 0; i < selectedCages.length - 1; i++) { if (selectedCages[i+1].cellIdx !== selectedCages[i].cellIdx + 1) { isContiguous = false; break; } }
                 if (isContiguous && selectedCages.length > 0) {
                     dragData.blockOffset = selectedCages.findIndex(c => c.id === cageId);
                     selectedCages.forEach(c => {
@@ -642,56 +649,42 @@
                         let rect = el.getBoundingClientRect();
                         dragData.items.push({ id: c.id, el, shiftX: e.clientX - rect.left, shiftY: e.clientY - rect.top });
                     });
-                } else {
-                    initSingleDrag(cageEl, cageId, e); 
-                }
+                } else initSingleDrag(cageEl, cageId, e); 
             }
-
-            document.addEventListener('pointermove', onPointerMove);
-            document.addEventListener('pointerup', onPointerUp);
+            document.addEventListener('pointermove', onPointerMove); document.addEventListener('pointerup', onPointerUp);
         });
     }
 
     function initSingleDrag(cageEl, cageId, e) {
-        dragData.blockOffset = 0;
-        let rect = cageEl.getBoundingClientRect();
+        dragData.blockOffset = 0; let rect = cageEl.getBoundingClientRect();
         dragData.items.push({ id: cageId, el: cageEl, shiftX: e.clientX - rect.left, shiftY: e.clientY - rect.top });
     }
 
     function onPointerMove(e) {
         if (!dragData.active) return;
-        
         if (!dragData.isDragging) {
             if (Math.abs(e.clientX - dragData.startX) > 5 || Math.abs(e.clientY - dragData.startY) > 5) {
                 dragData.isDragging = true;
                 dragData.items.forEach(item => {
                     const rect = item.el.getBoundingClientRect();
                     document.body.appendChild(item.el);
-                    item.el.classList.add('floating');
-                    item.el.classList.remove('selected');
+                    item.el.classList.add('floating'); item.el.classList.remove('selected');
                     
                     if (item.id === dragData.primaryId) {
-                        item.el.style.width = rect.width + 'px';
-                        item.el.style.height = rect.height + 'px';
+                        item.el.style.width = rect.width + 'px'; item.el.style.height = rect.height + 'px';
                         item.el.style.transformOrigin = `${dragData.shiftX}px ${dragData.shiftY}px`;
-                        
                         if (dragData.items.length > 1) {
-                            let badge = document.createElement('div');
-                            badge.className = 'drag-badge'; badge.id = 'drag-badge';
-                            badge.innerText = dragData.items.length;
-                            item.el.appendChild(badge);
+                            let badge = document.createElement('div'); badge.className = 'drag-badge'; badge.id = 'drag-badge';
+                            badge.innerText = dragData.items.length; item.el.appendChild(badge);
                         }
-                    } else {
-                        item.el.style.display = 'none'; 
-                    }
+                    } else item.el.style.display = 'none'; 
                 });
             } else return; 
         }
 
         dragData.items.forEach(item => {
             if (item.id === dragData.primaryId) {
-                item.el.style.left = (e.clientX - item.shiftX) + 'px';
-                item.el.style.top = (e.clientY - item.shiftY) + 'px';
+                item.el.style.left = (e.clientX - item.shiftX) + 'px'; item.el.style.top = (e.clientY - item.shiftY) + 'px';
             }
         });
 
@@ -703,9 +696,7 @@
             } else rackEl.classList.remove('drag-over');
         });
 
-        if (hoveredRack && hoveredRack !== currentRack) {
-            currentRack = hoveredRack; renderMainBoard(); buildLeftSidebar();
-        }
+        if (hoveredRack && hoveredRack !== currentRack) { currentRack = hoveredRack; renderMainBoard(); buildLeftSidebar(); }
 
         let minD = 9999; let hoverIdx = -1;
         document.querySelectorAll('#main-grid .slot').forEach(slot => {
@@ -718,7 +709,6 @@
 
     function calculateShiftLogic(targetIdx, isSim) {
         if (targetIdx === -1) return null;
-        
         let K = dragData.items.length;
         let blockTargetIdx = targetIdx - dragData.blockOffset;
         let capacity = RACK_ROWS[currentRack] * 7;
@@ -735,7 +725,6 @@
         if (occupants.length > 0) {
             let isLeftmost = (blockTargetIdx % 7 === 0);
             let shiftedLeft = false;
-
             if (!isLeftmost) {
                 let emptyLeftSlots = [];
                 for (let i = blockTargetIdx - 1; i >= 0; i--) {
@@ -748,7 +737,6 @@
                     shiftedLeft = true;
                 }
             }
-
             if (!shiftedLeft) {
                 let emptyRightSlots = [];
                 for (let i = blockEnd + 1; i < capacity + 100; i++) {
@@ -765,122 +753,79 @@
     function previewShift(targetIdx) {
         if (currentHoverIdx === targetIdx) return; 
         currentHoverIdx = targetIdx;
-
         const grid = document.getElementById('main-grid');
         const slots = grid.querySelectorAll('.slot');
-        
         let result = calculateShiftLogic(targetIdx, true);
         if (!result) return;
-
         result.workCages.forEach(cage => {
             const el = document.getElementById(cage.id);
             const targetSlot = slots[cage.cellIdx];
-            if (el && targetSlot) {
-                el.style.left = targetSlot.offsetLeft + 'px'; el.style.top = targetSlot.offsetTop + 'px';
-            }
+            if (el && targetSlot) { el.style.left = targetSlot.offsetLeft + 'px'; el.style.top = targetSlot.offsetTop + 'px'; }
         });
     }
 
     function onPointerUp(e) {
         if (!dragData.active) return;
         dragData.active = false;
-        document.removeEventListener('pointermove', onPointerMove);
-        document.removeEventListener('pointerup', onPointerUp);
+        document.removeEventListener('pointermove', onPointerMove); document.removeEventListener('pointerup', onPointerUp);
 
         if (!dragData.isDragging) {
-            if (!batchMoveMode) {
-                clearSelection();
-                openModal(dragData.primaryId); 
-            }
+            if (!batchMoveMode) { clearSelection(); openModal(dragData.primaryId); }
             return;
         }
 
-        let finalIdx = currentHoverIdx; 
-        previewShift(-1); 
+        let finalIdx = currentHoverIdx; previewShift(-1); 
         
         dragData.items.forEach(item => {
             item.el.classList.remove('floating'); item.el.style.display = '';
-            let badge = document.getElementById('drag-badge');
-            if (badge) badge.remove();
+            let badge = document.getElementById('drag-badge'); if (badge) badge.remove();
             item.el.remove();
         });
 
         if (finalIdx !== -1) {
             let result = calculateShiftLogic(finalIdx, false);
             if (result) {
-                result.workCages.forEach(wc => {
-                    let target = cages.find(c => c.id === wc.id);
-                    if (target) target.cellIdx = wc.cellIdx;
-                });
-                
+                result.workCages.forEach(wc => { let target = cages.find(c => c.id === wc.id); if (target) target.cellIdx = wc.cellIdx; });
                 dragData.items.forEach((item, idx) => {
                     let target = cages.find(c => c.id === item.id);
-                    if (target) {
-                        target.rackId = currentRack; target.cellIdx = result.blockTargetIdx + idx;
-                    }
+                    if (target) { target.rackId = currentRack; target.cellIdx = result.blockTargetIdx + idx; }
                 });
             }
         }
 
-        if (batchMoveMode) {
-            batchMoveMode = false;
-            clearSelection();
-        } else {
-            clearSelection();
-        }
-
+        if (batchMoveMode) { batchMoveMode = false; clearSelection(); } else { clearSelection(); }
         renderMainBoard();
         document.querySelectorAll('.map-rack').forEach(el => el.classList.remove('drag-over'));
     }
 
     function updateSelectionUI() {
         document.querySelectorAll('.cage').forEach(el => {
-            if (selectedIds.has(el.id)) el.classList.add('selected');
-            else el.classList.remove('selected');
+            if (selectedIds.has(el.id)) el.classList.add('selected'); else el.classList.remove('selected');
         });
 
-        const bar = document.getElementById('batch-bar');
-        const badge = document.getElementById('contiguous-badge');
-        const moveBtn = document.getElementById('btn-batch-move');
-        const batchBtn = document.getElementById('btn-batch');
+        const bar = document.getElementById('batch-bar'); const badge = document.getElementById('contiguous-badge');
+        const moveBtn = document.getElementById('btn-batch-move'); const batchBtn = document.getElementById('btn-batch');
 
         if (selectedIds.size > 0 && !batchMoveMode) {
-            bar.classList.add('show');
-            document.getElementById('batch-count').innerText = `${selectedIds.size}개 케이지 선택됨`;
-
+            bar.classList.add('show'); document.getElementById('batch-count').innerText = `${selectedIds.size}개 케이지 선택됨`;
             const result = checkContiguous();
             if (result.ok) {
-                badge.className = 'contiguous-badge ok';
-                badge.innerText = '✦ 연속 배치 (이동 가능)';
-                moveBtn.style.display = '';
-                moveBtn.removeAttribute('disabled');
-                batchBtn.removeAttribute('disabled');
+                badge.className = 'contiguous-badge ok'; badge.innerText = '✦ 연속 배치 (이동 가능)';
+                moveBtn.style.display = ''; moveBtn.removeAttribute('disabled'); batchBtn.removeAttribute('disabled');
             } else {
-                badge.className = 'contiguous-badge ng';
-                badge.innerText = '✕ 비연속 (이동 불가)';
-                moveBtn.setAttribute('disabled', true);
-                batchBtn.setAttribute('disabled', true);
+                badge.className = 'contiguous-badge ng'; badge.innerText = '✕ 비연속 (이동 불가)';
+                moveBtn.setAttribute('disabled', true); batchBtn.setAttribute('disabled', true);
             }
         } else if (selectedIds.size === 0 && !batchMoveMode) {
-            bar.classList.remove('show');
-            badge.className = 'contiguous-badge';
-            badge.innerText = '';
-            batchBtn.removeAttribute('disabled');
-            moveBtn.style.display = '';
+            bar.classList.remove('show'); badge.className = 'contiguous-badge'; badge.innerText = '';
+            batchBtn.removeAttribute('disabled'); moveBtn.style.display = '';
         }
     }
 
     function clearSelection() {
-        selectedIds.clear();
-        batchMoveMode = false;
-        document.getElementById('btn-batch-move').style.display = '';
-
-        const batchBtn = document.getElementById('btn-batch');
-        batchBtn.removeAttribute('disabled');
-        if (!isBatchMode) {
-            batchBtn.classList.remove('btn-active');
-            batchBtn.innerText = '☑️ 일괄 선택';
-        }
+        selectedIds.clear(); batchMoveMode = false; document.getElementById('btn-batch-move').style.display = '';
+        const batchBtn = document.getElementById('btn-batch'); batchBtn.removeAttribute('disabled');
+        if (!isBatchMode) { batchBtn.classList.remove('btn-active'); batchBtn.innerText = '☑️ 일괄 선택'; }
         updateSelectionUI();
     }
 
@@ -904,11 +849,9 @@
 
         let slotsFragment = document.createDocumentFragment();
         for (let i = 0; i < totalCapacity; i++) {
-            const slot = document.createElement('div');
-            slot.className = 'slot' + (i >= baseCapacity ? ' ghost-slot' : '');
+            const slot = document.createElement('div'); slot.className = 'slot' + (i >= baseCapacity ? ' ghost-slot' : '');
             const rChar = String.fromCharCode(64 + Math.floor(i / 7) + 1);
-            slot.setAttribute('data-label', `${rChar}-${(i % 7) + 1}`);
-            slot.dataset.idx = i;
+            slot.setAttribute('data-label', `${rChar}-${(i % 7) + 1}`); slot.dataset.idx = i;
             slot.onclick = () => { if (!isBatchMode && !batchMoveMode) { clearSelection(); openModal(null, i); } };
             slotsFragment.appendChild(slot);
         }
@@ -926,25 +869,21 @@
             if (dragIds.includes(cage.id)) return; 
 
             let el = document.getElementById(cage.id);
-            let displaySub = cage.type === 'mating' ? cage.code + cage.subId : cage.subId;
+            let displaySub = cage.subId || '';
             let htmlContent = cage.type === 'mating' 
-                ? `<span class="strain-code" style="font-size:24px; letter-spacing:-1px;">${displaySub}</span>` 
-                : `<span class="strain-code">${cage.code}</span><span class="sub-id">${displaySub}</span>`;
+                ? `<span class="strain-code" style="font-size:24px; letter-spacing:-1px;">${cage.code}${displaySub}</span>` 
+                : `<span class="strain-code">${cage.code}</span>` + (displaySub ? `<span class="sub-id">${displaySub}</span>` : '');
 
             if (!el) {
                 el = document.createElement('div'); el.id = cage.id; 
-                el.className = `cage ${cage.type}`;
-                el.innerHTML = htmlContent;
-                setupDragEngine(el, cage.id);
-                grid.appendChild(el);
+                el.className = `cage ${cage.type}`; el.innerHTML = htmlContent;
+                setupDragEngine(el, cage.id); grid.appendChild(el);
             } else {
-                // 💡 [버그 해결] 화면에 이미 존재하는 케이지도 텍스트/클래스를 즉시 갱신
-                el.className = `cage ${cage.type}`;
-                el.innerHTML = htmlContent;
+                // 💡 [핵심 버그 수정] 기존 요소 재사용 시 데이터 변화(텍스트/컬러) 완벽 동기화
+                el.className = `cage ${cage.type}`; el.innerHTML = htmlContent;
             }
 
-            if (selectedIds.has(cage.id)) el.classList.add('selected');
-            else el.classList.remove('selected');
+            if (selectedIds.has(cage.id)) el.classList.add('selected'); else el.classList.remove('selected');
 
             setTimeout(() => {
                 const targetSlot = slots[cage.cellIdx];
@@ -955,55 +894,79 @@
     }
 
     function buildLeftSidebar() {
-        const configBox = document.getElementById('config-box');
-        configBox.innerHTML = '';
+        const configBox = document.getElementById('config-box'); configBox.innerHTML = '';
         for (const [rName, rows] of Object.entries(RACK_ROWS)) {
             const rowDiv = document.createElement('div'); rowDiv.className = 'config-row';
             rowDiv.innerHTML = `<span>Rack ${rName} 세로 줄 수</span><input type="number" class="config-input" value="${rows}" min="1" max="10" data-rack="${rName}">`;
             rowDiv.querySelector('input').onchange = (e) => { RACK_ROWS[e.target.dataset.rack] = parseInt(e.target.value); renderMainBoard(); buildLeftSidebar(); };
             configBox.appendChild(rowDiv);
         }
-
         document.querySelectorAll('.map-rack').forEach(rackEl => {
             const rackName = rackEl.dataset.rack;
             rackEl.onclick = () => { currentRack = rackName; buildLeftSidebar(); renderMainBoard(); };
-            if(rackName === currentRack) rackEl.classList.add('active');
-            else rackEl.classList.remove('active');
+            if(rackName === currentRack) rackEl.classList.add('active'); else rackEl.classList.remove('active');
         });
     }
 
     const modal = document.getElementById('modal');
     let targetSlotIdxForCreate = null;
 
+    // --- 💡 [신규] Today 날짜 세팅 및 Genotype 매칭 함수 ---
+    function setToday(inputId) {
+        const tzOffset = (new Date()).getTimezoneOffset() * 60000; 
+        const today = (new Date(Date.now() - tzOffset)).toISOString().split('T')[0];
+        document.getElementById(inputId).value = today;
+    }
+
+    function updateGenotypeDisplay() {
+        const codeInput = document.getElementById('m-code').value.toUpperCase();
+        const display = document.getElementById('genotype-display');
+        if (!codeInput) {
+            display.innerText = "Genotype: 기호를 입력하세요";
+            display.style.color = "var(--text-sub)";
+        } else if (STRAIN_MAP[codeInput]) {
+            display.innerText = `Genotype: ${STRAIN_MAP[codeInput]}`;
+            display.style.color = "#34c759"; // 초록색 매칭 성공
+        } else {
+            display.innerText = "Genotype: 매칭 안됨 (매칭표 확인)";
+            display.style.color = "#FF375F"; // 빨간색 매칭 실패
+        }
+    }
+
     function openModal(cageId, slotIdx = null) {
         const overflow = blockIfOverflow();
-
-        if (!cageId) {
-            if (overflow) return;
-            targetSlotIdxForCreate = slotIdx;
-        }
+        if (!cageId) { if (overflow) return; targetSlotIdxForCreate = slotIdx; }
 
         if (cageId) {
             const c = cages.find(x => x.id === cageId);
             document.getElementById('m-id').value = c.id;
             document.getElementById('m-type').value = c.type; document.getElementById('m-code').value = c.code;
-            document.getElementById('m-sub').value = c.subId; document.getElementById('m-female').value = c.female !== undefined ? c.female : 0;
-            document.getElementById('m-male').value = c.male !== undefined ? c.male : 0; document.getElementById('m-dob').value = c.dob || "";
-            document.getElementById('m-dom').value = c.dom || ""; document.getElementById('m-notes').value = c.notes || "";
+            document.getElementById('m-sub').value = c.subId; document.getElementById('m-notes').value = c.notes || "";
+            
+            // Mating Fields
+            document.getElementById('m-dom').value = c.dom || "";
+            document.getElementById('m-male-count').value = c.mMale || 0;
+            document.getElementById('m-male-geno').value = c.mGeno || "";
+            document.getElementById('m-male-dob').value = c.mDob || "";
+            document.getElementById('m-female-count').value = c.mFemale || 0;
+            document.getElementById('m-female-geno').value = c.fGeno || "";
+            document.getElementById('m-female-dob').value = c.fDob || "";
+            
+            // Breeding Fields
+            document.getElementById('b-gender').value = c.gender || "unknown";
+            document.getElementById('b-count').value = c.bCount || 0;
+            document.getElementById('b-dob').value = c.bDob || "";
+
             document.getElementById('btn-delete').style.display = 'block';
 
             if (overflow) {
                 document.getElementById('modal-title').innerHTML = '케이지 삭제 전용 <span style="font-size:11px;color:#FF375F;font-weight:600;background:rgba(255,55,95,0.12);padding:2px 8px;border-radius:6px;border:1px solid rgba(255,55,95,0.3);">⚠ 초과 상태 — 수정 불가</span>';
-                document.getElementById('btn-save').setAttribute('disabled', true);
-                document.getElementById('btn-save').style.opacity = '0.3';
-                document.getElementById('btn-save').style.cursor = 'not-allowed';
+                document.getElementById('btn-save').setAttribute('disabled', true); document.getElementById('btn-save').style.opacity = '0.3'; document.getElementById('btn-save').style.cursor = 'not-allowed';
                 document.querySelectorAll('#modal .form-control').forEach(el => el.setAttribute('disabled', true));
                 document.getElementById('m-type').setAttribute('disabled', true);
             } else {
                 document.getElementById('modal-title').innerText = '케이지 데이터 편집';
-                document.getElementById('btn-save').removeAttribute('disabled');
-                document.getElementById('btn-save').style.opacity = '';
-                document.getElementById('btn-save').style.cursor = '';
+                document.getElementById('btn-save').removeAttribute('disabled'); document.getElementById('btn-save').style.opacity = ''; document.getElementById('btn-save').style.cursor = '';
                 document.querySelectorAll('#modal .form-control').forEach(el => el.removeAttribute('disabled'));
                 document.getElementById('m-type').removeAttribute('disabled');
             }
@@ -1011,45 +974,45 @@
             targetSlotIdxForCreate = slotIdx;
             document.getElementById('modal-title').innerText = `신규 등록 (Rack ${currentRack})`; document.getElementById('m-id').value = "";
             document.getElementById('m-type').value = "breeding"; document.getElementById('m-code').value = "";
-            document.getElementById('m-sub').value = ""; document.getElementById('m-female').value = 0;
-            document.getElementById('m-male').value = 0; document.getElementById('m-dob').value = "";
-            document.getElementById('m-dom').value = ""; document.getElementById('m-notes').value = "";
+            document.getElementById('m-sub').value = ""; document.getElementById('m-notes').value = "";
+            
+            document.getElementById('m-dom').value = ""; document.getElementById('m-male-count').value = ""; document.getElementById('m-male-geno').value = ""; document.getElementById('m-male-dob').value = "";
+            document.getElementById('m-female-count').value = ""; document.getElementById('m-female-geno').value = ""; document.getElementById('m-female-dob').value = "";
+            
+            document.getElementById('b-gender').value = "female"; document.getElementById('b-count').value = 1; document.getElementById('b-dob').value = "";
+            
             document.getElementById('btn-delete').style.display = 'none';
-            document.getElementById('btn-save').removeAttribute('disabled');
-            document.getElementById('btn-save').style.opacity = '';
-            document.getElementById('btn-save').style.cursor = '';
+            document.getElementById('btn-save').removeAttribute('disabled'); document.getElementById('btn-save').style.opacity = ''; document.getElementById('btn-save').style.cursor = '';
             document.querySelectorAll('#modal .form-control').forEach(el => el.removeAttribute('disabled'));
         }
-        toggleModalFields(); modal.style.display = 'flex';
+        toggleModalFields(); updateGenotypeDisplay(); modal.style.display = 'flex';
     }
 
     function toggleModalFields() {
         const type = document.getElementById('m-type').value;
         if (type === 'mating') {
-            document.getElementById('dob-group').style.display = 'none'; document.getElementById('dom-group').style.display = 'block';
-            document.getElementById('sub-label').innerText = "Mating 일련세트 번호 (예: 52)";
+            document.getElementById('breeding-fields').style.display = 'none'; document.getElementById('mating-fields').style.display = 'block';
         } else {
-            document.getElementById('dob-group').style.display = 'block'; document.getElementById('dom-group').style.display = 'none';
-            document.getElementById('sub-label').innerText = "Genotype 번호 또는 마리수";
+            document.getElementById('mating-fields').style.display = 'none'; document.getElementById('breeding-fields').style.display = 'block';
         }
     }
 
     function closeModal() { modal.style.display = 'none'; dragData.id = null; }
 
     function saveCage() {
+        if (blockIfOverflow() && !document.getElementById('m-id').value) { closeModal(); return; }
         const id = document.getElementById('m-id').value;
-        // 💡 [버그 해결] 신규 생성일 때만 오버플로우 방지 (수정은 그대로 허용)
-        if (!id && blockIfOverflow()) { closeModal(); return; }
-        
         const info = {
             type: document.getElementById('m-type').value, code: document.getElementById('m-code').value.toUpperCase(),
-            subId: document.getElementById('m-sub').value, female: parseInt(document.getElementById('m-female').value) || 0,
-            male: parseInt(document.getElementById('m-male').value) || 0, dob: document.getElementById('m-dob').value,
-            dom: document.getElementById('m-dom').value, notes: document.getElementById('m-notes').value
+            subId: document.getElementById('m-sub').value, notes: document.getElementById('m-notes').value,
+            dom: document.getElementById('m-dom').value, mMale: parseInt(document.getElementById('m-male-count').value) || 0,
+            mGeno: document.getElementById('m-male-geno').value, mDob: document.getElementById('m-male-dob').value,
+            mFemale: parseInt(document.getElementById('m-female-count').value) || 0, fGeno: document.getElementById('m-female-geno').value,
+            fDob: document.getElementById('m-female-dob').value, gender: document.getElementById('b-gender').value,
+            bCount: parseInt(document.getElementById('b-count').value) || 0, bDob: document.getElementById('b-dob').value
         };
         if (id) { Object.assign(cages.find(x => x.id === id), info); } 
         else { cages.push({ id: 'c_' + Date.now(), rackId: currentRack, cellIdx: targetSlotIdxForCreate, ...info }); }
-        
         closeModal(); renderMainBoard(); buildLeftSidebar();
     }
 
@@ -1063,10 +1026,9 @@
     // --- 💡 [신규] 자유로운 Strain 커스텀 패널 로직 ---
     function openMatchPanel(e) {
         e.stopPropagation();
+        if (blockIfOverflow()) return;
         const listContainer = document.getElementById('mapping-list'); listContainer.innerHTML = '';
-        for(const [key, val] of Object.entries(STRAIN_MAP)) {
-            listContainer.appendChild(createStrainRow(key, val));
-        }
+        for(const [key, val] of Object.entries(STRAIN_MAP)) { listContainer.appendChild(createStrainRow(key, val)); }
         document.getElementById('match-panel').classList.add('open');
     }
 
@@ -1080,9 +1042,7 @@
         return row;
     }
 
-    function addStrainRow() {
-        document.getElementById('mapping-list').appendChild(createStrainRow('', ''));
-    }
+    function addStrainRow() { document.getElementById('mapping-list').appendChild(createStrainRow('', '')); }
 
     function saveAndCloseMatchPanel() {
         STRAIN_MAP = {};
@@ -1092,6 +1052,7 @@
             if (key) STRAIN_MAP[key] = val;
         });
         document.getElementById('match-panel').classList.remove('open');
+        updateGenotypeDisplay(); // 현재 열려있는 모달이 있다면 글씨 업데이트
     }
 
     function updateStatsBar() {
@@ -1103,8 +1064,7 @@
         updateOverflowUI(); 
     }
 
-    buildLeftSidebar();
-    renderMainBoard();
+    buildLeftSidebar(); renderMainBoard();
 </script>
 </body>
 </html>
