@@ -130,6 +130,8 @@
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             font-weight: bold; box-shadow: 0 8px 20px rgba(0,0,0,0.3); box-sizing: border-box;
             cursor: grab; touch-action: none; z-index: 10;
+            /* 💡 추가됨: 위치(left, top)가 변할 때 부드럽게 미끄러지는 효과 */
+            transition: left 0.35s cubic-bezier(0.2, 0.8, 0.2, 1), top 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
         }
         /* 💡 수정됨: bg 대신 color 변수를 매칭하여 색상이 정상 적용되게 함 */
         /* --- 메탈릭 그라데이션 케이지 효과 --- */
@@ -163,6 +165,8 @@
             pointer-events: none;
             position: fixed !important;
             left: 0; top: 0; margin: 0 !important;
+            /* 💡 추가됨: 마우스로 끌고 다닐 때는 부드러운 효과를 꺼야 포인터를 늦지 않게 따라갑니다. */
+            transition: none !important; 
         }
 
         .strain-code { font-size: 30px; font-weight: 800; line-height: 1; letter-spacing: -0.5px; }
@@ -310,34 +314,35 @@
 </div>
 
 <script>
-    let RACK_ROWS = { 'A': 5, 'B': 5, 'C': 5, 'D': 3, 'E': 3 };
+   let RACK_ROWS = { 'A': 5, 'B': 5, 'C': 5, 'D': 3, 'E': 3 };
     let currentRack = 'A';
     let STRAIN_MAP = { 'A': 'K18-hACE2', 'C': 'Aim2', 'W': 'Wild Type' };
 
     let cages = [
-        { id: 'm1', rackId: 'A', cellIdx: 0, type: 'mating', code: 'A', subId: '51', female: 2, male: 1, dob: '', dom: '2026-05-10', notes: '' },
-        { id: 'm2', rackId: 'A', cellIdx: 1, type: 'mating', code: 'A', subId: '52', female: 1, male: 1, dob: '', dom: '2026-05-12', notes: '' },
-        { id: 'm3', rackId: 'A', cellIdx: 2, type: 'mating', code: 'A', subId: '53', female: 2, male: 1, dob: '', dom: '2026-05-14', notes: '' },
-        { id: 'm4', rackId: 'A', cellIdx: 3, type: 'mating', code: 'A', subId: '54', female: 2, male: 1, dob: '', dom: '2026-05-15', notes: '' },
-        { id: 'm5', rackId: 'B', cellIdx: 0, type: 'mating', code: 'A', subId: '55', female: 1, male: 1, dob: '', dom: '', notes: '' },
-        { id: 'm6', rackId: 'B', cellIdx: 1, type: 'mating', code: 'A', subId: '56', female: 1, male: 1, dob: '', dom: '', notes: '' },
-        { id: 'm7', rackId: 'C', cellIdx: 5, type: 'mating', code: 'A', subId: '57', female: 2, male: 1, dob: '', dom: '', notes: '' },
-        { id: 'm8', rackId: 'C', cellIdx: 6, type: 'mating', code: 'A', subId: '58', female: 2, male: 1, dob: '', dom: '', notes: '' },
-        { id: 'm9', rackId: 'D', cellIdx: 4, type: 'mating', code: 'A', subId: '59', female: 1, male: 1, dob: '', dom: '', notes: '' },
-        { id: 'm10', rackId: 'E', cellIdx: 4, type: 'mating', code: 'A', subId: '60', female: 1, male: 1, dob: '', dom: '', notes: '' },
-        { id: 'b1', rackId: 'A', cellIdx: 4, type: 'breeding', code: 'C', subId: '5마리', female: 5, male: 0, dob: '2026-04-01', dom: '', notes: '' },
-        { id: 'b2', rackId: 'A', cellIdx: 5, type: 'breeding', code: 'C', subId: 'C10', female: 3, male: 2, dob: '2026-04-03', dom: '', notes: '' },
-        { id: 'b3', rackId: 'A', cellIdx: 6, type: 'breeding', code: 'C', subId: 'C11', female: 4, male: 0, dob: '2026-04-05', dom: '', notes: '' },
-        { id: 'b4', rackId: 'B', cellIdx: 10, type: 'breeding', code: 'C', subId: '3마리', female: 0, male: 3, dob: '', dom: '', notes: '' },
-        { id: 'b5', rackId: 'B', cellIdx: 11, type: 'breeding', code: 'C', subId: '4마리', female: 2, male: 2, dob: '', dom: '', notes: '' },
-        { id: 'b6', rackId: 'C', cellIdx: 0, type: 'breeding', code: 'C', subId: 'C12', female: 5, male: 0, dob: '', dom: '', notes: '' },
-        { id: 'b7', rackId: 'C', cellIdx: 1, type: 'breeding', code: 'C', subId: 'C13', female: 3, male: 0, dob: '', dom: '', notes: '' },
-        { id: 'b8', rackId: 'D', cellIdx: 0, type: 'breeding', code: 'C', subId: '2마리', notes: '' },
-        { id: 'b9', rackId: 'D', cellIdx: 1, type: 'breeding', code: 'C', subId: 'C14', female: 4, male: 0, dob: '', dom: '', notes: '' },
-        { id: 'b10', rackId: 'E', cellIdx: 0, type: 'breeding', code: 'C', subId: '5마리', female: 2, male: 3, dob: '', dom: '', notes: '' }
+        { id: 'm1', rackId: 'A', cellIdx: 0, type: 'mating', code: 'A', subId: '51', female: 2, male: 1 },
+        { id: 'm2', rackId: 'A', cellIdx: 1, type: 'mating', code: 'A', subId: '52', female: 1, male: 1 },
+        { id: 'm3', rackId: 'A', cellIdx: 2, type: 'mating', code: 'A', subId: '53', female: 2, male: 1 },
+        { id: 'm4', rackId: 'A', cellIdx: 3, type: 'mating', code: 'A', subId: '54', female: 2, male: 1 },
+        { id: 'm5', rackId: 'B', cellIdx: 0, type: 'mating', code: 'A', subId: '55', female: 1, male: 1 },
+        { id: 'm6', rackId: 'B', cellIdx: 1, type: 'mating', code: 'A', subId: '56', female: 1, male: 1 },
+        { id: 'm7', rackId: 'C', cellIdx: 5, type: 'mating', code: 'A', subId: '57', female: 2, male: 1 },
+        { id: 'm8', rackId: 'C', cellIdx: 6, type: 'mating', code: 'A', subId: '58', female: 2, male: 1 },
+        { id: 'm9', rackId: 'D', cellIdx: 4, type: 'mating', code: 'A', subId: '59', female: 1, male: 1 },
+        { id: 'm10', rackId: 'E', cellIdx: 4, type: 'mating', code: 'A', subId: '60', female: 1, male: 1 },
+        { id: 'b1', rackId: 'A', cellIdx: 4, type: 'breeding', code: 'C', subId: '5마리', female: 5, male: 0 },
+        { id: 'b2', rackId: 'A', cellIdx: 5, type: 'breeding', code: 'C', subId: 'C10', female: 3, male: 2 },
+        { id: 'b3', rackId: 'A', cellIdx: 6, type: 'breeding', code: 'C', subId: 'C11', female: 4, male: 0 },
+        { id: 'b4', rackId: 'B', cellIdx: 10, type: 'breeding', code: 'C', subId: '3마리', female: 0, male: 3 },
+        { id: 'b5', rackId: 'B', cellIdx: 11, type: 'breeding', code: 'C', subId: '4마리', female: 2, male: 2 },
+        { id: 'b6', rackId: 'C', cellIdx: 0, type: 'breeding', code: 'C', subId: 'C12', female: 5, male: 0 },
+        { id: 'b7', rackId: 'C', cellIdx: 1, type: 'breeding', code: 'C', subId: 'C13', female: 3, male: 0 },
+        { id: 'b8', rackId: 'D', cellIdx: 0, type: 'breeding', code: 'C', subId: '2마리' },
+        { id: 'b9', rackId: 'D', cellIdx: 1, type: 'breeding', code: 'C', subId: 'C14', female: 4, male: 0 },
+        { id: 'b10', rackId: 'E', cellIdx: 0, type: 'breeding', code: 'C', subId: '5마리', female: 2, male: 3 }
     ];
 
     let dragData = { id: null, active: false, el: null, shiftX: 0, shiftY: 0 };
+    let currentHoverIdx = -1; // 현재 마우스가 올라가 있는 그리드 칸 번호
 
     function setupDragEngine(cageEl, cageId) {
         cageEl.addEventListener('pointerdown', (e) => {
@@ -353,11 +358,9 @@
             dragData.shiftY = e.clientY - rect.top;
 
             document.body.appendChild(cageEl);
-
             cageEl.classList.add('floating');
             cageEl.style.width = rect.width + 'px';
             cageEl.style.height = rect.height + 'px';
-            
             cageEl.style.transformOrigin = `${dragData.shiftX}px ${dragData.shiftY}px`;
             
             moveAt(e.clientX, e.clientY);
@@ -371,19 +374,76 @@
         if (!dragData.active) return;
         moveAt(e.clientX, e.clientY);
 
+        // 1. 도면 위를 맴돌 때 랙 자동 전환 기능 (Hover to Switch)
+        let hoveredRack = null;
         document.querySelectorAll('.map-rack').forEach(rackEl => {
             const r = rackEl.getBoundingClientRect();
             if (e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom) {
                 rackEl.classList.add('drag-over');
+                hoveredRack = rackEl.dataset.rack;
             } else {
                 rackEl.classList.remove('drag-over');
             }
         });
+
+        if (hoveredRack && hoveredRack !== currentRack) {
+            currentRack = hoveredRack;
+            renderMainBoard(); 
+            buildLeftSidebar();
+        }
+
+        // 2. 놓을 위치를 미리 계산해서 비켜주는 애니메이션 연산
+        let minD = 9999;
+        let hoverIdx = -1;
+        document.querySelectorAll('#main-grid .slot').forEach(slot => {
+            const r = slot.getBoundingClientRect();
+            const d = Math.hypot((r.left + r.width/2) - e.clientX, (r.top + r.height/2) - e.clientY);
+            // 마우스가 슬롯 중심에서 55px 이내로 들어오면 타겟으로 인식
+            if (d < minD && d < 55) { minD = d; hoverIdx = parseInt(slot.dataset.idx); }
+        });
+        previewShift(hoverIdx);
     }
 
     function moveAt(x, y) {
         dragData.el.style.left = (x - dragData.shiftX) + 'px';
         dragData.el.style.top = (y - dragData.shiftY) + 'px';
+    }
+
+    // ⭐️ 핵심 기능: 자리를 비켜주는 시각적 애니메이션 처리 함수
+    function previewShift(targetIdx) {
+        if (currentHoverIdx === targetIdx) return; // 동일한 칸이면 재계산 방지
+        currentHoverIdx = targetIdx;
+
+        const grid = document.getElementById('main-grid');
+        const slots = grid.querySelectorAll('.slot');
+        
+        // 드래그 중인 케이지를 제외한 현재 랙의 복사본 생성
+        let simCages = cages.filter(c => c.rackId === currentRack && c.id !== dragData.id).map(c => ({...c}));
+        
+        // 겹치는 자리에 누군가 있다면 뒤로 쭈욱 밀어내는 연산
+        if (targetIdx !== -1) {
+            const occupant = simCages.find(c => c.cellIdx === targetIdx);
+            if (occupant) {
+                let capacity = RACK_ROWS[currentRack] * 7;
+                let firstEmpty = -1;
+                for (let i = targetIdx; i < capacity + 50; i++) {
+                    if (!simCages.some(c => c.cellIdx === i)) { firstEmpty = i; break; }
+                }
+                simCages.forEach(c => {
+                    if (c.cellIdx >= targetIdx && c.cellIdx < firstEmpty) { c.cellIdx += 1; }
+                });
+            }
+        }
+
+        // 연산된 임시 위치를 DOM에 즉시 적용 (CSS Transition이 부드럽게 밀어줌)
+        simCages.forEach(cage => {
+            const el = document.getElementById(cage.id);
+            const targetSlot = slots[cage.cellIdx];
+            if (el && targetSlot) {
+                el.style.left = targetSlot.offsetLeft + 'px';
+                el.style.top = targetSlot.offsetTop + 'px';
+            }
+        });
     }
 
     function onPointerUp(e) {
@@ -392,38 +452,25 @@
         document.removeEventListener('pointermove', onPointerMove);
         document.removeEventListener('pointerup', onPointerUp);
 
+        // 드래그 종료 시 임시 밀어내기 효과 초기화
+        previewShift(-1); 
+        
         dragData.el.classList.remove('floating');
-        dragData.el.remove();
+        dragData.el.remove(); // body에서 분리
 
-        let crossed = false;
-
-        document.querySelectorAll('.map-rack').forEach(rackEl => {
-            if (rackEl.classList.contains('drag-over')) {
-                rackEl.classList.remove('drag-over');
-                crossed = true;
-                crossRackMove(dragData.id, rackEl.dataset.rack);
-            }
-        });
-
-        if (!crossed) {
-            const slots = document.querySelectorAll('#main-grid .slot');
-            let targetSlot = null;
-            let minD = 9999;
-
-            slots.forEach(slot => {
-                const r = slot.getBoundingClientRect();
-                const d = Math.hypot((r.left + r.width/2) - e.clientX, (r.top + r.height/2) - e.clientY);
-                if (d < minD && d < 55) { minD = d; targetSlot = slot; }
-            });
-
-            if (targetSlot) {
-                executeSmartShift(dragData.id, currentRack, parseInt(targetSlot.dataset.idx));
-            } else {
-                renderMainBoard();
-            }
+        if (currentHoverIdx !== -1) {
+            // 마우스가 올려져 있던 최종 슬롯에 안착
+            executeSmartShift(dragData.id, currentRack, currentHoverIdx);
+        } else {
+            // 엉뚱한 곳에 놓으면 원래 자리로 원상복구
+            renderMainBoard();
         }
+        
+        // 도면 효과 초기화
+        document.querySelectorAll('.map-rack').forEach(el => el.classList.remove('drag-over'));
     }
 
+    // 데이터 영구 저장 및 확정
     function executeSmartShift(cageId, targetRack, targetIdx) {
         const item = cages.find(c => c.id === cageId);
         if (item.rackId === targetRack && item.cellIdx === targetIdx) { renderMainBoard(); return; }
@@ -432,7 +479,7 @@
         if (occupant) {
             let capacity = RACK_ROWS[targetRack] * 7;
             let firstEmpty = -1;
-            for (let i = targetIdx; i < capacity + 20; i++) {
+            for (let i = targetIdx; i < capacity + 50; i++) {
                 if (!cages.some(c => c.rackId === targetRack && c.cellIdx === i && c.id !== cageId)) {
                     firstEmpty = i; break;
                 }
@@ -449,66 +496,75 @@
         buildLeftSidebar();
     }
 
-    function crossRackMove(cageId, targetRack) {
-        const item = cages.find(c => c.id === cageId);
-        let targetIdx = 0;
-        while (cages.some(c => c.rackId === targetRack && c.cellIdx === targetIdx)) { targetIdx++; }
-        item.rackId = targetRack;
-        item.cellIdx = targetIdx;
-        currentRack = targetRack;
-        renderMainBoard();
-        buildLeftSidebar();
-    }
-
+    // ⭐️ 화면 재생성 최적화: 기존 요소를 파괴하지 않고 위치만 업데이트
     function renderMainBoard() {
         const grid = document.getElementById('main-grid');
-        grid.innerHTML = '';
         document.getElementById('current-rack-title').innerText = `Rack ${currentRack}`;
         
         const baseCapacity = RACK_ROWS[currentRack] * 7;
         const currentCages = cages.filter(c => c.rackId === currentRack);
-        const maxIdx = currentCages.reduce((max, c) => c.cellIdx > max ? c.cellIdx : max, baseCapacity - 1);
+        const maxIdx = currentCages.reduce((max, c) => Math.max(max, c.cellIdx), baseCapacity - 1);
         const totalCapacity = maxIdx + 1;
 
         document.getElementById('current-rack-desc').innerText = `${RACK_ROWS[currentRack]}행 × 7열 (${baseCapacity}칸 내부 정원)`;
 
+        // 1. 기존 슬롯 지우기 (케이지는 남겨둠)
+        Array.from(grid.children).forEach(child => {
+            if (child.classList.contains('slot')) child.remove();
+        });
+
+        // 2. 새로운 슬롯 깔기 (가장 밑바닥에 삽입)
+        let slotsFragment = document.createDocumentFragment();
         for (let i = 0; i < totalCapacity; i++) {
             const slot = document.createElement('div');
-            slot.className = 'slot';
-            if (i >= baseCapacity) slot.classList.add('ghost-slot');
-            
+            slot.className = 'slot' + (i >= baseCapacity ? ' ghost-slot' : '');
             const rChar = String.fromCharCode(64 + Math.floor(i / 7) + 1);
             slot.setAttribute('data-label', `${rChar}-${(i % 7) + 1}`);
             slot.dataset.idx = i;
             slot.onclick = () => openModal(null, i);
-            grid.appendChild(slot);
+            slotsFragment.appendChild(slot);
         }
+        grid.prepend(slotsFragment);
 
-        currentCages.forEach(cage => {
-            const targetSlot = grid.children[cage.cellIdx];
-            if (!targetSlot) return;
+        const slots = grid.querySelectorAll('.slot');
+        const currentCageIds = currentCages.map(c => c.id);
 
-            const el = document.createElement('div');
-            el.className = `cage ${cage.type}`;
-            
-            let displaySub = cage.subId;
-            if (cage.type === 'mating') {
-                displaySub = cage.code + cage.subId;
-                el.innerHTML = `<span class="strain-code" style="font-size:24px; letter-spacing:-1px;">${displaySub}</span>`;
-            } else {
-                el.innerHTML = `<span class="strain-code">${cage.code}</span><span class="sub-id">${displaySub}</span>`;
+        // 3. 다른 랙으로 떠났거나 삭제된 케이지 제거
+        Array.from(grid.querySelectorAll('.cage')).forEach(el => {
+            if (!currentCageIds.includes(el.id) && el.id !== dragData.id) {
+                el.remove();
             }
-            
-            el.onclick = (e) => { e.stopPropagation(); openModal(cage.id); };
-            
-            setupDragEngine(el, cage.id);
+        });
 
+        // 4. 케이지 생성 및 부드러운 위치 이동
+        currentCages.forEach(cage => {
+            if (dragData.active && cage.id === dragData.id) return; // 드래그 중인 본체는 무시
+
+            let el = document.getElementById(cage.id);
+            if (!el) {
+                // 화면에 없는 케이지라면 새로 생성
+                el = document.createElement('div');
+                el.id = cage.id;
+                el.className = `cage ${cage.type}`;
+                let displaySub = cage.type === 'mating' ? cage.code + cage.subId : cage.subId;
+                if (cage.type === 'mating') {
+                    el.innerHTML = `<span class="strain-code" style="font-size:24px; letter-spacing:-1px;">${displaySub}</span>`;
+                } else {
+                    el.innerHTML = `<span class="strain-code">${cage.code}</span><span class="sub-id">${displaySub}</span>`;
+                }
+                el.onclick = (e) => { e.stopPropagation(); openModal(cage.id); };
+                setupDragEngine(el, cage.id);
+                grid.appendChild(el);
+            }
+
+            // 약간의 딜레이를 주어 CSS Transition이 발동하게 만듦
             setTimeout(() => {
-                el.style.left = targetSlot.offsetLeft + 'px';
-                el.style.top = targetSlot.offsetTop + 'px';
-            }, 0);
-
-            grid.appendChild(el);
+                const targetSlot = slots[cage.cellIdx];
+                if (targetSlot) {
+                    el.style.left = targetSlot.offsetLeft + 'px';
+                    el.style.top = targetSlot.offsetTop + 'px';
+                }
+            }, 10);
         });
         updateStatsBar();
     }
@@ -531,7 +587,6 @@
             configBox.appendChild(rowDiv);
         }
 
-        // 💡 수정됨: 사라진 map-navigator 대신 지도 자체(room-map)를 버튼으로 활용
         document.querySelectorAll('.map-rack').forEach(rackEl => {
             const rackName = rackEl.dataset.rack;
             rackEl.onclick = () => { 
@@ -539,13 +594,8 @@
                 buildLeftSidebar(); 
                 renderMainBoard(); 
             };
-            
-            // 현재 활성화된 랙 표시
-            if(rackName === currentRack) {
-                rackEl.classList.add('active');
-            } else {
-                rackEl.classList.remove('active');
-            }
+            if(rackName === currentRack) rackEl.classList.add('active');
+            else rackEl.classList.remove('active');
         });
     }
 
@@ -612,11 +662,9 @@
             notes: document.getElementById('m-notes').value
         };
 
-        if (id) {
-            Object.assign(cages.find(x => x.id === id), info);
-        } else {
-            cages.push({ id: 'c_' + Date.now(), rackId: currentRack, cellIdx: targetSlotIdxForCreate, ...info });
-        }
+        if (id) { Object.assign(cages.find(x => x.id === id), info); } 
+        else { cages.push({ id: 'c_' + Date.now(), rackId: currentRack, cellIdx: targetSlotIdxForCreate, ...info }); }
+        
         closeModal(); renderMainBoard(); buildLeftSidebar();
     }
 
@@ -625,10 +673,7 @@
         closeModal(); renderMainBoard(); buildLeftSidebar();
     }
 
-    // 💡 수정됨: matchPanel 변수 미정의 오류 수정
-    function toggleMatchPanel() {
-        document.getElementById('match-panel').classList.toggle('open');
-    }
+    function toggleMatchPanel() { document.getElementById('match-panel').classList.toggle('open'); }
 
     function openMatchPanel(e) {
         e.stopPropagation();
@@ -651,10 +696,9 @@
         document.getElementById('occupancy-bar').style.width = `${rate}%`;
     }
 
-    // 초기 시스템 가동
     buildLeftSidebar();
     renderMainBoard();
-</script>
+    </script>
 
 </body>
 </html>
