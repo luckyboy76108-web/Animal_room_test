@@ -243,6 +243,19 @@
         }
         .batch-bar.show { bottom: 40px; }
         .batch-count { font-weight: 700; color: #ffcc00; font-size: 15px; letter-spacing: -0.5px;}
+        /* --- 💡 [신규] 일괄 선택 모드 전용 효과 --- */
+        .btn-active {
+            background: #0a84ff !important; color: white !important;
+            border-color: #0a84ff !important; box-shadow: 0 0 15px rgba(10, 132, 255, 0.4);
+        }
+        
+        body.batch-mode .cage { transition: filter 0.3s, transform 0.3s; }
+        
+        /* 모드 활성화 시 선택되지 않은 녀석들은 어둡게 가라앉음 */
+        body.batch-mode .cage:not(.selected) {
+            filter: brightness(0.4) opacity(0.6);
+            transform: scale(0.95);
+        }
     </style>
 </head>
 <body>
@@ -252,6 +265,9 @@
     <div class="top-right">
         <div class="progress-text">공간 사용률: <span id="occupancy-label">0%</span></div>
         <div class="progress-container"><div class="progress-bar" id="occupancy-bar"></div></div>
+        
+        <button class="header-btn" id="btn-batch" onclick="toggleBatchMode()">☑️ 일괄 선택</button>
+        
         <button class="header-btn" onclick="openMatchPanel(event)">🧬 Strain 매칭표 편집</button>
     </div>
 </header>
@@ -357,7 +373,6 @@
     let currentRack = 'A';
     let STRAIN_MAP = { 'A': 'K18-hACE2', 'C': 'Aim2', 'W': 'Wild Type' };
 
-    // 💡 테스트용 데이터 자동 100% 생성 (A, B, C 꽉 채움)
     let cages = [];
     ['A', 'B', 'C'].forEach(rack => {
         for(let i=0; i<35; i++) {
@@ -372,14 +387,33 @@
         cages.push({ id: `D_${i}`, rackId: 'D', cellIdx: i, type: 'breeding', code: 'W', subId: `${i+1}`, female: 2, male: 0 });
     }
 
-    // 💡 [신규] 다중 선택 및 드래그 엔진 상태 관리
+    // 💡 상태 관리 변수
+    let isBatchMode = false; // 일괄 선택 모드 토글
     let selectedIds = new Set();
     let dragData = { active: false, isDragging: false, items: [], primaryId: null, blockOffset: 0, startX: 0, startY: 0 };
     let marquee = { active: false, startX: 0, startY: 0, additive: false, initial: new Set() };
     let currentHoverIdx = -1;
 
-    // --- 🖱️ [신규] 배경 마우스 드래그를 이용한 일괄 다중 선택 기능 ---
+    // --- 🪄 [신규] 일괄 선택 모드 토글 함수 ---
+    function toggleBatchMode() {
+        isBatchMode = !isBatchMode;
+        const btn = document.getElementById('btn-batch');
+        if (isBatchMode) {
+            document.body.classList.add('batch-mode');
+            btn.classList.add('btn-active');
+            btn.innerText = '✅ 선택 완료 (이제 이동가능)';
+        } else {
+            document.body.classList.remove('batch-mode');
+            btn.classList.remove('btn-active');
+            btn.innerText = '☑️ 일괄 선택';
+            marquee.active = false;
+            document.getElementById('selection-marquee').style.display = 'none';
+        }
+    }
+
+    // --- 🖱️ [수정됨] 드래그 다중 선택 기능 (모드 켜졌을 때만 작동) ---
     document.addEventListener('pointerdown', (e) => {
+        if (!isBatchMode) return; // 💡 버튼을 안 눌렀으면 드래그 박스 작동 안 함! (기존 스크롤 충돌 해결)
         if (e.button !== 0 || e.target.closest('.cage') || e.target.closest('header') || e.target.closest('.map-nav') || e.target.closest('.modal') || e.target.closest('.batch-bar')) return;
         
         marquee.active = true;
@@ -402,21 +436,22 @@
         box.style.height = '0px';
     });
 
-    // --- 🚀 코어 드래그 앤 드롭 엔진 (단일/블록 스위칭) ---
+    // --- 🚀 코어 엔진 (선택 모드와 이동 모드의 완벽한 분리) ---
     function setupDragEngine(cageEl, cageId) {
         cageEl.addEventListener('pointerdown', (e) => {
             if (e.button !== 0) return; 
             e.preventDefault();
-            e.stopPropagation(); // 배경 다중 선택과 충돌 방지
+            e.stopPropagation();
 
-            // Ctrl/Shift + 클릭 시 다중 선택 개별 추가
-            if (e.ctrlKey || e.metaKey || e.shiftKey) {
+            // 💡 1. 일괄 선택 모드일 때: 케이지를 클릭하면 '선택'만 되고 움직이지 않음
+            if (isBatchMode) {
                 if (selectedIds.has(cageId)) selectedIds.delete(cageId);
                 else selectedIds.add(cageId);
                 updateSelectionUI();
-                return;
+                return; // 여기서 멈춤 (드래그 이동 불가)
             }
 
+            // 💡 2. 일반 모드일 때: 선택된 블록이거나 단일 케이지 이동 시작
             dragData.active = true;
             dragData.isDragging = false;
             dragData.startX = e.clientX;
@@ -442,7 +477,7 @@
                         dragData.items.push({ id: c.id, el: el, shiftX: e.clientX - rect.left, shiftY: e.clientY - rect.top });
                     });
                 } else {
-                    initSingleDrag(cageEl, cageId, e); // 띄엄띄엄 선택 시 단일 이동으로 전환
+                    initSingleDrag(cageEl, cageId, e); 
                 }
             }
 
@@ -496,7 +531,6 @@
                         item.el.style.height = rect.height + 'px';
                         item.el.style.transformOrigin = `${dragData.shiftX}px ${dragData.shiftY}px`;
                         
-                        // 💡 Apple 방식 뱃지 UI: 여러 개 드래그 시 뭉쳐짐
                         if (dragData.items.length > 1) {
                             let badge = document.createElement('div');
                             badge.className = 'drag-badge'; badge.id = 'drag-badge';
@@ -504,7 +538,7 @@
                             item.el.appendChild(badge);
                         }
                     } else {
-                        item.el.style.display = 'none'; // 나머지 요소들은 마우스 따라다닐 때 감춤
+                        item.el.style.display = 'none'; 
                     }
                 });
             } else return; 
@@ -538,7 +572,6 @@
         previewShift(hoverIdx);
     }
 
-    // ⭐️ [인공지능 코어] 블록 크기에 맞춰 가장 왼쪽 빈칸을 찾는 모세의 기적 알고리즘
     function calculateShiftLogic(targetIdx, isSim) {
         if (targetIdx === -1) return null;
         
@@ -653,7 +686,6 @@
         document.querySelectorAll('.map-rack').forEach(el => el.classList.remove('drag-over'));
     }
 
-    // --- 🪄 [신규] UI 업데이트 및 일괄 삭제 로직 ---
     function updateSelectionUI() {
         document.querySelectorAll('.cage').forEach(el => {
             if (selectedIds.has(el.id)) el.classList.add('selected');
