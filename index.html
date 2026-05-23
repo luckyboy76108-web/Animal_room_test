@@ -55,11 +55,12 @@
         .config-input { width: 50px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.2); color: white; padding: 4px; border-radius: 6px; text-align: center; }
 
         /* 🗺️ 동물실 실제 배치 도면 (Dropzone 역할 통합) */
-        .room-map {
-            position: relative; width: 100%; 
-            height: 360px; /* 💡 수정됨: 랙들이 겹치지 않게 도면 높이를 290px -> 360px로 넉넉히 확보 */
-            background: rgba(0,0,0,0.2);
-            border: 1px solid var(--glass-border); border-radius: 24px; box-sizing: border-box;
+        .map-rack {
+            position: absolute; /* 컨테이너(room-map)를 기준으로 절대 좌표 배치 */
+            background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 14px; cursor: pointer; transition: all 0.2s;
+            /* 주의: 여기에 position: relative; 를 절대 넣지 마세요! */
         }
 
         /* --- 💡 겹침 및 이탈을 원천 차단하는 반응형 정밀 배치 좌표 --- */
