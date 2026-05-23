@@ -314,7 +314,7 @@
 </div>
 
 <script>
-   let RACK_ROWS = { 'A': 5, 'B': 5, 'C': 5, 'D': 3, 'E': 3 };
+    let RACK_ROWS = { 'A': 5, 'B': 5, 'C': 5, 'D': 3, 'E': 3 };
     let currentRack = 'A';
     let STRAIN_MAP = { 'A': 'K18-hACE2', 'C': 'Aim2', 'W': 'Wild Type' };
 
@@ -341,8 +341,9 @@
         { id: 'b10', rackId: 'E', cellIdx: 0, type: 'breeding', code: 'C', subId: '5마리', female: 2, male: 3 }
     ];
 
-    let dragData = { id: null, active: false, el: null, shiftX: 0, shiftY: 0 };
-    let currentHoverIdx = -1; // 현재 마우스가 올라가 있는 그리드 칸 번호
+    // 💡 1. isDragging, startX, startY 상태가 추가되었습니다.
+    let dragData = { id: null, active: false, isDragging: false, el: null, shiftX: 0, shiftY: 0, startX: 0, startY: 0 };
+    let currentHoverIdx = -1; 
 
     function setupDragEngine(cageEl, cageId) {
         cageEl.addEventListener('pointerdown', (e) => {
@@ -351,20 +352,18 @@
             
             dragData.id = cageId;
             dragData.active = true;
+            dragData.isDragging = false; // 드래그 여부 초기화
             dragData.el = cageEl;
+            
+            // 클릭한 초기 위치 저장
+            dragData.startX = e.clientX;
+            dragData.startY = e.clientY;
             
             const rect = cageEl.getBoundingClientRect();
             dragData.shiftX = e.clientX - rect.left;
             dragData.shiftY = e.clientY - rect.top;
 
-            document.body.appendChild(cageEl);
-            cageEl.classList.add('floating');
-            cageEl.style.width = rect.width + 'px';
-            cageEl.style.height = rect.height + 'px';
-            cageEl.style.transformOrigin = `${dragData.shiftX}px ${dragData.shiftY}px`;
-            
-            moveAt(e.clientX, e.clientY);
-            
+            // 💡 주의: 여기서 바로 요소를 뜯어내지 않고 기다립니다.
             document.addEventListener('pointermove', onPointerMove);
             document.addEventListener('pointerup', onPointerUp);
         });
@@ -372,9 +371,27 @@
 
     function onPointerMove(e) {
         if (!dragData.active) return;
+        
+        // 💡 2. 클릭과 드래그 구분 (마우스가 5px 이상 이동해야 드래그 시작)
+        if (!dragData.isDragging) {
+            if (Math.abs(e.clientX - dragData.startX) > 5 || Math.abs(e.clientY - dragData.startY) > 5) {
+                dragData.isDragging = true; // 이제 드래그로 판정!
+                
+                // 본격적인 드래그가 시작될 때만 요소를 뜯어내서 효과를 줍니다.
+                const rect = dragData.el.getBoundingClientRect();
+                document.body.appendChild(dragData.el);
+                dragData.el.classList.add('floating');
+                dragData.el.style.width = rect.width + 'px';
+                dragData.el.style.height = rect.height + 'px';
+                dragData.el.style.transformOrigin = `${dragData.shiftX}px ${dragData.shiftY}px`;
+            } else {
+                return; // 5px 미만 움직임은 무시 (떨림 방지)
+            }
+        }
+
         moveAt(e.clientX, e.clientY);
 
-        // 1. 도면 위를 맴돌 때 랙 자동 전환 기능 (Hover to Switch)
+        // 도면 위를 맴돌 때 랙 자동 전환
         let hoveredRack = null;
         document.querySelectorAll('.map-rack').forEach(rackEl => {
             const r = rackEl.getBoundingClientRect();
@@ -392,13 +409,12 @@
             buildLeftSidebar();
         }
 
-        // 2. 놓을 위치를 미리 계산해서 비켜주는 애니메이션 연산
+        // 놓을 위치 미리보기 연산
         let minD = 9999;
         let hoverIdx = -1;
         document.querySelectorAll('#main-grid .slot').forEach(slot => {
             const r = slot.getBoundingClientRect();
             const d = Math.hypot((r.left + r.width/2) - e.clientX, (r.top + r.height/2) - e.clientY);
-            // 마우스가 슬롯 중심에서 55px 이내로 들어오면 타겟으로 인식
             if (d < minD && d < 55) { minD = d; hoverIdx = parseInt(slot.dataset.idx); }
         });
         previewShift(hoverIdx);
@@ -409,18 +425,15 @@
         dragData.el.style.top = (y - dragData.shiftY) + 'px';
     }
 
-    // ⭐️ 핵심 기능: 자리를 비켜주는 시각적 애니메이션 처리 함수
     function previewShift(targetIdx) {
-        if (currentHoverIdx === targetIdx) return; // 동일한 칸이면 재계산 방지
+        if (currentHoverIdx === targetIdx) return; 
         currentHoverIdx = targetIdx;
 
         const grid = document.getElementById('main-grid');
         const slots = grid.querySelectorAll('.slot');
         
-        // 드래그 중인 케이지를 제외한 현재 랙의 복사본 생성
         let simCages = cages.filter(c => c.rackId === currentRack && c.id !== dragData.id).map(c => ({...c}));
         
-        // 겹치는 자리에 누군가 있다면 뒤로 쭈욱 밀어내는 연산
         if (targetIdx !== -1) {
             const occupant = simCages.find(c => c.cellIdx === targetIdx);
             if (occupant) {
@@ -435,7 +448,6 @@
             }
         }
 
-        // 연산된 임시 위치를 DOM에 즉시 적용 (CSS Transition이 부드럽게 밀어줌)
         simCages.forEach(cage => {
             const el = document.getElementById(cage.id);
             const targetSlot = slots[cage.cellIdx];
@@ -452,21 +464,27 @@
         document.removeEventListener('pointermove', onPointerMove);
         document.removeEventListener('pointerup', onPointerUp);
 
-        // 드래그 종료 시 임시 밀어내기 효과 초기화
+        // 💡 3. 드래그가 아니었다면 클릭으로 처리하고 즉시 종료!
+        if (!dragData.isDragging) {
+            openModal(dragData.id);
+            return;
+        }
+
+        // 💡 4. 드롭 로직: -1로 초기화되기 전에 타겟 인덱스를 백업해둡니다.
+        let finalIdx = currentHoverIdx; 
+        
         previewShift(-1); 
         
         dragData.el.classList.remove('floating');
-        dragData.el.remove(); // body에서 분리
+        dragData.el.remove(); 
 
-        if (currentHoverIdx !== -1) {
-            // 마우스가 올려져 있던 최종 슬롯에 안착
-            executeSmartShift(dragData.id, currentRack, currentHoverIdx);
+        // 백업해둔 finalIdx로 데이터를 확정 짓습니다.
+        if (finalIdx !== -1) {
+            executeSmartShift(dragData.id, currentRack, finalIdx);
         } else {
-            // 엉뚱한 곳에 놓으면 원래 자리로 원상복구
             renderMainBoard();
         }
         
-        // 도면 효과 초기화
         document.querySelectorAll('.map-rack').forEach(el => el.classList.remove('drag-over'));
     }
 
