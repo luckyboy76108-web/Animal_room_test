@@ -55,21 +55,39 @@
         .config-input { width: 50px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.2); color: white; padding: 4px; border-radius: 6px; text-align: center; }
 
         /* 🗺️ 동물실 실제 배치 도면 (Dropzone 역할 통합) */
+        /* 🗺️ 동물실 실제 배치 도면 (컨테이너 전체 배치 및 높이 확장) */
+        .room-map {
+            position: relative;
+            width: 100%;
+            height: 360px; /* 💡 수정됨: 하단 영역 랙들을 수용하기 위해 높이를 넉넉히 확보 (290px -> 360px) */
+            margin-top: auto; /* 💡 수정됨: 도면 컨테이너 자체를 사이드바 하단에 정렬 */
+            margin-bottom: 0;
+            background: rgba(0,0,0,0.2);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            box-sizing: border-box;
+            overflow: hidden; /* 도면 박스 밖으로 나가는 요소 숨김 */
+        }
+
+        /* --- 💡 도면 내 요소 정밀 배치 좌표 --- */
+        
         .map-rack {
-            position: absolute; /* 컨테이너(room-map)를 기준으로 절대 좌표 배치 */
+            position: absolute; /* 💡 필수: 컨테이너(room-map)를 기준으로 절대 좌표 배치. 뒤에 relative 오타를 반드시 지워주세요! */
             background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.15);
             border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center;
             font-weight: 700; font-size: 14px; cursor: pointer; transition: all 0.2s;
-            /* 주의: 여기에 position: relative; 를 절대 넣지 마세요! */
+            /* 💣 오타 주의: 여기에 position: relative; 를 절대 넣지 마세요! 이 한 줄이 도면을 망쳤습니다. */
         }
+        .map-rack.active { border-color: #ffcc00; background: rgba(255, 204, 0, 0.08); box-shadow: 0 0 15px rgba(255,204,0,0.2); }
+        .map-rack h3 { margin: 0 0 5px 0; font-size: 16px; font-weight: 600; }
+        .map-rack p { margin: 0; font-size: 12px; color: var(--text-sub); }
+        .map-rack.drag-over { background: rgba(52, 199, 89, 0.15); border-color: #34c759; transform: scale(1.03); }
 
-        /* --- 💡 겹침 및 이탈을 원천 차단하는 반응형 정밀 배치 좌표 --- */
-        /* 1행 (A, B) */
+        /* 1행 (A, B) - 상단 영역 */
         .rack-A { top: 15px; left: 15px; width: 80px; height: 110px; }
         .rack-B { top: 15px; right: 15px; width: 80px; height: 110px; }
         
-        /* 2행 (C, Change Station) */
-        .rack-C { top: 140px; left: 15px; width: 80px; height: 110px; }
+        /* 2행 (Change Station) - 중앙-우측 */
         .change-station {
             position: absolute; top: 140px; right: 15px; width: 80px; height: 110px;
             border: 1px dashed rgba(255,255,255,0.12); background: rgba(255,255,255,0.01);
@@ -77,10 +95,15 @@
             font-size: 12px; color: var(--text-sub); text-align: center; line-height: 1.4; font-weight: 600;
         }
 
-        /* 3행, 4행 (D, E - 가로 꽉 차는 형태) */
-        /* width: auto에 left/right를 동시에 주면 삐져나가지 않고 중앙에 딱 맞게 정렬됩니다. */
-        .rack-D { top: 265px; left: 15px; right: 15px; height: 32px; width: auto; }
-        .rack-E { top: 310px; left: 15px; right: 15px; height: 32px; width: auto; }
+        /* 💡 수정됨: 하단 하단 영역 랙 (C, D, E) 정렬 */
+        /* C 랙 - 하단 왼쪽 고정폭 */
+        .rack-C { top: 265px; left: 15px; width: 80px; height: 80px; /* C는 하단 영역 왼쪽 */ }
+
+        /* D 랙 - C 옆, 가로 꽉 차는 형태 */
+        .rack-D { top: 265px; left: 110px; right: 15px; height: 32px; width: auto; /* width: auto로 박스 이탈 방지 */ }
+        
+        /* E 랙 - D 옆, 가로 꽉 차는 형태 */
+        .rack-E { top: 310px; left: 110px; right: 15px; height: 32px; width: auto; /* width: auto로 박스 이탈 방지 */ }  
         /* 오른쪽: 메인 격자 보드 */
         .board-pane { flex: 1; padding: 30px; display: flex; flex-direction: column; justify-content: flex-start; align-items: flex-start; overflow: auto; box-sizing: border-box; }
         .board-header { margin-bottom: 20px; }
