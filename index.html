@@ -1331,7 +1331,7 @@
             if (data && data.cages) {
                 if (data.cages) cages = data.cages;
                 if (data.rackRows) RACK_ROWS = data.rackRows;
-                if (data.strainMap) STRAIN_MAP = data.strainMap;
+                if (data.strainMap) STRAIN_MAP = { ...STRAIN_MAP, ...data.strainMap };
                 if (data.logs) {
                     editLog = data.logs;
                     localStorage.setItem(LOG_KEY, JSON.stringify(editLog));
