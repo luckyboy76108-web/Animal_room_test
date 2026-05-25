@@ -1270,13 +1270,22 @@
     function addStrainRow() { document.getElementById('mapping-list').appendChild(createStrainRow('', '', false)); }
 
     function saveAndCloseMatchPanel() {
-        STRAIN_MAP = {};
+        const tempMap = {};
         document.querySelectorAll('.match-row').forEach(row => {
             const k = row.querySelector('.match-key-input').value.trim().toUpperCase();
             const name = row.querySelector('.match-val-input').value.trim();
             const g_done = row.querySelector('.match-gdone-input').checked;
-            if (k) STRAIN_MAP[k] = { name, g_done };
+            if (k) tempMap[k] = { name, g_done };
         });
+        
+        const sortedKeys = Object.keys(tempMap).sort((a, b) => {
+            if (a.length !== b.length) return a.length - b.length;
+            return a.localeCompare(b);
+        });
+        
+        STRAIN_MAP = {};
+        sortedKeys.forEach(k => { STRAIN_MAP[k] = tempMap[k]; });
+        
         document.getElementById('match-panel').classList.remove('open');
         updateGenotypeDisplay();
     }
@@ -1311,7 +1320,7 @@
 
     // ── Google Apps Script Sync ───────────────────
     // 구글 시트 배포 후 발급받은 Web App URL을 여기에 입력하세요.
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyGQi63_gyDrG5OuE93F8mYnlD4nYim1CXsZy65EVUxCyjxouPapenYZAp1Ddrcm9Gl/exec'; 
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyBMP5UX4piNcCcREbd1NJQ46irgH2US1eUjSvpyHwXgzAk6MLtKhDBqy8JqMrLUeDN/exec'; 
     // 임의의 비밀번호(API KEY)를 설정하세요. Apps Script의 API_KEY와 정확히 같아야 합니다.
     const API_KEY = 'my-secret-password-1234';
 
