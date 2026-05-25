@@ -1198,7 +1198,12 @@
             if (prev.type !== info.type) changed.push(`type: ${prev.type}→${info.type}`);
             if (prev.code !== info.code) changed.push(`code: ${prev.code}→${info.code}`);
             if (prev.subId !== info.subId) changed.push(`subId: ${prev.subId}→${info.subId}`);
-            if (prev.notes !== info.notes) changed.push('notes updated');
+            if (prev.notes !== info.notes) {
+                changed.push('notes updated');
+                info.noteUpdated = Date.now();
+            } else {
+                info.noteUpdated = prev.noteUpdated;
+            }
             if (prev.dom !== info.dom) changed.push(`DOM: ${prev.dom||'—'}→${info.dom||'—'}`);
             if (prev.gender !== info.gender) changed.push(`gender: ${prev.gender}→${info.gender}`);
             if (prev.bCount !== info.bCount) changed.push(`count: ${prev.bCount}→${info.bCount}`);
@@ -1213,6 +1218,7 @@
             );
         } else {
             const newId = 'c_' + Date.now();
+            if (info.notes) info.noteUpdated = Date.now();
             cages.push({ id: newId, rackId: currentRack, cellIdx: targetSlotIdxForCreate, ...info });
             logAction('create',
                 `New cage created in Rack ${currentRack} / slot ${targetSlotIdxForCreate}`,
@@ -1297,7 +1303,7 @@
 
     // ── Google Apps Script Sync ───────────────────
     // 구글 시트 배포 후 발급받은 Web App URL을 여기에 입력하세요.
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyU0sk6t6M9EJcc4SLpjOyz35WznogmjqijT_lMxely9PaNs7DBLQ5rCSolpdXTzzbu/exec'; 
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz9CvAest5r5OWx3f_rM2nyD3Ol2XwPh-piWixYlzxqmW9CECWB_n-aaZO3--WvXf9k/exec'; 
     // 임의의 비밀번호(API KEY)를 설정하세요. Apps Script의 API_KEY와 정확히 같아야 합니다.
     const API_KEY = 'my-secret-password-1234';
 
