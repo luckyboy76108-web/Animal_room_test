@@ -493,15 +493,16 @@
     let RACK_ROWS = { 'A': 5, 'B': 5, 'C': 5, 'D': 3, 'E': 3 };
     let currentRack = 'A';
     let STRAIN_MAP = {
-        'A': 'K18-ACE2', 'AA': 'Nlrp1abc', 'AB': 'Nlrp2', 'AC': 'Nlrp4a', 'AD': 'Nlrp4b',
-        'AE': 'Nlrp5 flox', 'AF': 'Nlrp6', 'AG': 'hNlrp8', 'AH': 'Nlrp9b', 'AHH': 'Nlrp3*K18 dKO',
-        'AI': 'hNlrp11', 'AJ': 'hNlrp13', 'AK': 'Nlrp14', 'AL': 'Nlrx1', 'AN': 'cGAS',
-        'AO': 'Rigi', 'AP': 'Ifih1', 'AQ': 'NOD1', 'AR': 'NOD2', 'AS': 'JunD',
-        'AT': 'CD163', 'AU': 'Nlrc5', 'C': 'AIM2', 'D': 'Casp1', 'F': 'IFnar1',
-        'FM': 'IFnar1*IFngr1 dKO', 'G': 'WT', 'H': 'Nlrp3', 'I': 'Nlrp12', 'J': 'Mefv',
-        'K': 'ZBP1', 'KRKR': 'ZBP1*K18 dKO', 'L': 'IFnlr1', 'M': 'IFngr1', 'N': 'Nlrc4',
-        'P': 'IL-10', 'PS': 'IL-10*K18 dKO', 'Q': 'Nlrp10', 'QIQI': 'Nlrp12*K18 dKO', 'QK': 'Nlrp10*ZBP1',
-        'R': 'Nlrc3', 'U': 'LysMCre'
+        'A': 'K18-ACE2', 'C': 'AIM2', 'D': 'Casp1', 'F': 'IFnar1', 'G': 'WT', 
+        'H': 'Nlrp3', 'I': 'Nlrp12', 'J': 'Mefv', 'K': 'ZBP1', 'L': 'IFnlr1', 
+        'M': 'IFngr1', 'N': 'Nlrc4', 'P': 'IL-10', 'Q': 'Nlrp10', 'R': 'Nlrc3', 'U': 'LysMCre',
+        'AA': 'Nlrp1abc', 'AB': 'Nlrp2', 'AC': 'Nlrp4a', 'AD': 'Nlrp4b', 'AE': 'Nlrp5 flox',
+        'AF': 'Nlrp6', 'AG': 'hNlrp8', 'AH': 'Nlrp9b', 'AI': 'hNlrp11', 'AJ': 'hNlrp13',
+        'AK': 'Nlrp14', 'AL': 'Nlrx1', 'AN': 'cGAS', 'AO': 'Rigi', 'AP': 'Ifih1', 
+        'AQ': 'NOD1', 'AR': 'NOD2', 'AS': 'JunD', 'AT': 'CD163', 'AU': 'Nlrc5',
+        'FM': 'IFnar1*IFngr1 dKO', 'PS': 'IL-10*K18 dKO', 'QK': 'Nlrp10*ZBP1',
+        'AHH': 'Nlrp3*K18 dKO',
+        'KRKR': 'ZBP1*K18 dKO', 'QIQI': 'Nlrp12*K18 dKO'
     };
 
     // ── Edit log (localStorage 영구 저장) ────────
@@ -1294,7 +1295,7 @@
 
     // ── Google Apps Script Sync ───────────────────
     // 구글 시트 배포 후 발급받은 Web App URL을 여기에 입력하세요.
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz8wSp8zZcrlFy-KeW3jPvtNBwy9QR5D-FWIxfhBmf0RPG39YJsjWpTifRVd2qiqjhH/exec'; 
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwt41PJB9jj2Dfvc-5m4M6Azzl5cDG_xFgc9C53azFd-KlyKNmBlCgXAYdkSA2ILwWT/exec'; 
     // 임의의 비밀번호(API KEY)를 설정하세요. Apps Script의 API_KEY와 정확히 같아야 합니다.
     const API_KEY = 'my-secret-password-1234';
 
@@ -1331,7 +1332,7 @@
             if (data && data.cages) {
                 if (data.cages) cages = data.cages;
                 if (data.rackRows) RACK_ROWS = data.rackRows;
-                if (data.strainMap) STRAIN_MAP = { ...STRAIN_MAP, ...data.strainMap };
+                // STRAIN_MAP는 HTML 내부 하드코딩된 값을 절대적 기준으로 사용 (구글 시트에서 불러오지 않음)
                 if (data.logs) {
                     editLog = data.logs;
                     localStorage.setItem(LOG_KEY, JSON.stringify(editLog));
