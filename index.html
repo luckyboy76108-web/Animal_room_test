@@ -33,7 +33,7 @@
         .top-right { display: flex; align-items: center; gap: 20px; }
         .progress-container { width: 180px; background: rgba(255,255,255,0.1); height: 10px; border-radius: 5px; overflow: hidden; }
         .progress-bar { height: 100%; background: linear-gradient(90deg, #ff9500, #ffcc00); width: 0%; transition: width 0.3s; }
-        .progress-text { font-size: 13px; color: var(--text-sub); font-weight: 600; }
+        .progress-text { font-size: 13px; color: var(--text-sub); font-weight: 600; white-space: nowrap; }
         
         .header-btn { background: rgba(255,255,255,0.08); border: 1px solid var(--glass-border); color: white; padding: 8px 16px; border-radius: 10px; cursor: pointer; font-weight: 600; transition: 0.2s; white-space: nowrap; }
         .header-btn:hover { background: rgba(255,255,255,0.15); }
@@ -324,7 +324,7 @@
 <body>
 
 <header>
-    <h1>Smart Rack OS <span style="font-size:14px; color:var(--mating-color); font-weight:bold; margin-left:6px;">v8.6 Absolute Precision</span></h1>
+    <h1>Small Animal Room Status <span style="font-size:14px; color:var(--mating-color); font-weight:bold; margin-left:6px;">v1.0</span></h1>
     <div class="top-right">
         <div class="progress-text">공간 사용률: <span id="occupancy-label">0%</span></div>
         <div class="progress-container"><div class="progress-bar" id="occupancy-bar"></div></div>
@@ -587,8 +587,8 @@
         'FM': { name: 'IFnar1*IFngr1 dKO', g_done: false }, 'PS': { name: 'IL-10*K18 dKO', g_done: false }, 
         'QK': { name: 'Nlrp10*ZBP1', g_done: false },
         'AHH': { name: 'Nlrp3*K18 dKO', g_done: false },
-        'KRKR': { name: 'ZBP1*K18 dKO', g_done: false }, 'QIQI': { name: 'Nlrp12*K18 dKO', g_done: false },
-        'IHIH': { name: 'Nlrp3*Nlrp12 dKO', g_done: true }
+        'KRKR': { name: 'ZBP1*K18 dKO', g_done: false }, 'IHIH': { name: 'Nlrp3*Nlrp12 dKO', g_done: true },
+        'QIQI': { name: 'Nlrp12*K18 dKO', g_done: false }        
     };
 
     // ── Edit log (localStorage 영구 저장) ────────
@@ -1252,7 +1252,7 @@ document.addEventListener('pointerdown', (e) => {
         for (const [rName, rows] of Object.entries(RACK_ROWS)) {
             const rowDiv = document.createElement('div'); rowDiv.className = 'config-row';
             rowDiv.innerHTML = `<span>Rack ${rName} 세로 줄 수</span><input type="number" class="config-input" value="${rows}" min="1" max="10" data-rack="${rName}">`;
-            rowDiv.querySelector('input').onchange = (e) => { RACK_ROWS[e.target.dataset.rack] = parseInt(e.target.value); renderMainBoard(); buildLeftSidebar(); };
+            rowDiv.querySelector('input').onchange = (e) => { RACK_ROWS[e.target.dataset.rack] = parseInt(e.target.value); renderMainBoard(); buildLeftSidebar(); syncToSheet(); };
             configBox.appendChild(rowDiv);
         }
         document.querySelectorAll('.map-rack').forEach(rackEl => {
@@ -1502,7 +1502,7 @@ document.addEventListener('pointerdown', (e) => {
 
     // ── Google Apps Script Sync ───────────────────
     // 구글 시트 배포 후 발급받은 Web App URL을 여기에 입력하세요.
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzcRs_z2mZSyayO0r6G5BZbZxLlB-Hhb7HshY2Us-sYYCuTb5ikHsryxMnmWpkjpEhX/exec'; 
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw_1fH-wO_9euGcnAy67jUILtYJDeZ5b_VzOprLHgV1UB-o4gqY1bRIs1e1i81UaEp5/exec'; 
     // 임의의 비밀번호(API KEY)를 설정하세요. Apps Script의 API_KEY와 정확히 같아야 합니다.
     const API_KEY = 'my-secret-password-1234';
 
