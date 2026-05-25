@@ -493,16 +493,24 @@
     let RACK_ROWS = { 'A': 5, 'B': 5, 'C': 5, 'D': 3, 'E': 3 };
     let currentRack = 'A';
     let STRAIN_MAP = {
-        'A': 'K18-ACE2', 'C': 'AIM2', 'D': 'Casp1', 'F': 'IFnar1', 'G': 'WT', 
-        'H': 'Nlrp3', 'I': 'Nlrp12', 'J': 'Mefv', 'K': 'ZBP1', 'L': 'IFnlr1', 
-        'M': 'IFngr1', 'N': 'Nlrc4', 'P': 'IL-10', 'Q': 'Nlrp10', 'R': 'Nlrc3', 'U': 'LysMCre',
-        'AA': 'Nlrp1abc', 'AB': 'Nlrp2', 'AC': 'Nlrp4a', 'AD': 'Nlrp4b', 'AE': 'Nlrp5 flox',
-        'AF': 'Nlrp6', 'AG': 'hNlrp8', 'AH': 'Nlrp9b', 'AI': 'hNlrp11', 'AJ': 'hNlrp13',
-        'AK': 'Nlrp14', 'AL': 'Nlrx1', 'AN': 'cGAS', 'AO': 'Rigi', 'AP': 'Ifih1', 
-        'AQ': 'NOD1', 'AR': 'NOD2', 'AS': 'JunD', 'AT': 'CD163', 'AU': 'Nlrc5',
-        'FM': 'IFnar1*IFngr1 dKO', 'PS': 'IL-10*K18 dKO', 'QK': 'Nlrp10*ZBP1',
-        'AHH': 'Nlrp3*K18 dKO',
-        'KRKR': 'ZBP1*K18 dKO', 'QIQI': 'Nlrp12*K18 dKO'
+        'A': { name: 'K18-ACE2', g_done: false }, 'C': { name: 'AIM2', g_done: true }, 'D': { name: 'Casp1', g_done: true }, 
+        'F': { name: 'IFnar1', g_done: true }, 'G': { name: 'WT', g_done: true }, 'H': { name: 'Nlrp3', g_done: true }, 
+        'I': { name: 'Nlrp12', g_done: true }, 'J': { name: 'Mefv', g_done: true }, 'K': { name: 'ZBP1', g_done: true }, 
+        'L': { name: 'IFnlr1', g_done: true }, 'M': 'IFngr1', g_done: true }, 'N': { name: 'Nlrc4', g_done: true }, 
+        'P': { name: 'IL-10', g_done: true }, 'Q': { name: 'Nlrp10', g_done: true }, 'R': { name: 'Nlrc3', g_done: true }, 
+        'U': { name: 'LysMCre', g_done: false },
+        'AA': { name: 'Nlrp1abc', g_done: true }, 'AB': { name: 'Nlrp2', g_done: true }, 'AC': { name: 'Nlrp4a', g_done: true }, 
+        'AD': { name: 'Nlrp4b', g_done: false }, 'AE': { name: 'Nlrp5 flox', g_done: false }, 'AF': { name: 'Nlrp6', g_done: false }, 
+        'AG': { name: 'hNlrp8', g_done: false }, 'AH': { name: 'Nlrp9b', g_done: true }, 'AI': { name: 'hNlrp11', g_done: false }, 
+        'AJ': { name: 'hNlrp13', g_done: false }, 'AK': { name: 'Nlrp14', g_done: false }, 'AL': { name: 'Nlrx1', g_done: true }, 
+        'AN': { name: 'cGAS', g_done: true }, 'AO': { name: 'Rigi', g_done: false }, 'AP': { name: 'Ifih1', g_done: false }, 
+        'AQ': { name: 'NOD1', g_done: false }, 'AR': { name: 'NOD2', g_done: true }, 'AS': { name: 'JunD', g_done: false }, 
+        'AT': { name: 'CD163', g_done: false }, 'AU': { name: 'Nlrc5', g_done: false },
+        'FM': { name: 'IFnar1*IFngr1 dKO', g_done: false }, 'PS': { name: 'IL-10*K18 dKO', g_done: false }, 
+        'QK': { name: 'Nlrp10*ZBP1', g_done: false },
+        'AHH': { name: 'Nlrp3*K18 dKO', g_done: false },
+        'KRKR': { name: 'ZBP1*K18 dKO', g_done: false }, 'QIQI': { name: 'Nlrp12*K18 dKO', g_done: false },
+        'IHIH': { name: 'IHIH', g_done: true }
     };
 
     // ── Edit log (localStorage 영구 저장) ────────
@@ -1086,7 +1094,11 @@
         const code = document.getElementById('m-code').value.toUpperCase();
         const el   = document.getElementById('genotype-display');
         if (!code)               { el.innerText = 'Genotype: 기호를 입력하세요'; el.style.color = 'var(--text-sub)'; }
-        else if (STRAIN_MAP[code]) { el.innerText = `Genotype: ${STRAIN_MAP[code]}`;    el.style.color = '#34c759'; }
+        else if (STRAIN_MAP[code]) { 
+            const sm = STRAIN_MAP[code];
+            el.innerText = `Genotype: ${sm.name}`;    
+            el.style.color = '#34c759'; 
+        }
         else                      { el.innerText = 'Genotype: 매칭 안됨 (매칭표 확인)'; el.style.color = '#FF375F'; }
     }
 
@@ -1233,33 +1245,37 @@
         e.stopPropagation();
         if (blockIfOverflow()) return;
         const list = document.getElementById('mapping-list'); list.innerHTML = '';
-        for (const [key, val] of Object.entries(STRAIN_MAP)) list.appendChild(createStrainRow(key, val));
+        for (const [key, obj] of Object.entries(STRAIN_MAP)) list.appendChild(createStrainRow(key, obj.name, obj.g_done));
         document.getElementById('match-panel').classList.add('open');
     }
 
-    function createStrainRow(key, val) {
+    function createStrainRow(key, name, g_done) {
         const row = document.createElement('div'); row.className = 'match-row';
         row.innerHTML = `
-            <input type="text" class="match-key-input" value="${key}" maxlength="2" placeholder="기호"
-                style="width:44px;text-align:center;background:rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.15);
+            <input type="text" class="match-key-input" value="${key}" maxlength="4" placeholder="기호"
+                style="width:50px;text-align:center;background:rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.15);
                 color:#ffcc00;font-weight:bold;border-radius:8px;padding:8px;">
-            <input type="text" class="match-val-input" value="${val}" placeholder="Strain 명칭 입력"
+            <input type="text" class="match-val-input" value="${name}" placeholder="Strain 명칭 입력"
                 style="flex:1;background:rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.15);
                 color:white;padding:8px;border-radius:8px;">
+            <label style="color:#34c759;font-size:12px;display:flex;align-items:center;gap:4px;white-space:nowrap;">
+                <input type="checkbox" class="match-gdone-input" ${g_done ? 'checked' : ''}> G완료
+            </label>
             <button onclick="this.parentElement.remove()"
                 style="background:none;border:none;color:#FF375F;font-size:20px;font-weight:bold;cursor:pointer;padding:0 5px;">×</button>
         `;
         return row;
     }
 
-    function addStrainRow() { document.getElementById('mapping-list').appendChild(createStrainRow('', '')); }
+    function addStrainRow() { document.getElementById('mapping-list').appendChild(createStrainRow('', '', false)); }
 
     function saveAndCloseMatchPanel() {
         STRAIN_MAP = {};
         document.querySelectorAll('.match-row').forEach(row => {
             const k = row.querySelector('.match-key-input').value.trim().toUpperCase();
-            const v = row.querySelector('.match-val-input').value.trim();
-            if (k) STRAIN_MAP[k] = v;
+            const name = row.querySelector('.match-val-input').value.trim();
+            const g_done = row.querySelector('.match-gdone-input').checked;
+            if (k) STRAIN_MAP[k] = { name, g_done };
         });
         document.getElementById('match-panel').classList.remove('open');
         updateGenotypeDisplay();
@@ -1295,7 +1311,7 @@
 
     // ── Google Apps Script Sync ───────────────────
     // 구글 시트 배포 후 발급받은 Web App URL을 여기에 입력하세요.
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwt41PJB9jj2Dfvc-5m4M6Azzl5cDG_xFgc9C53azFd-KlyKNmBlCgXAYdkSA2ILwWT/exec'; 
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbymrgDMNPEnXVe0AM-3tSAStzgdaygvn4DJTohxmykiSTd_e0Fi3AuL5yZ8u3-RaQpX/exec'; 
     // 임의의 비밀번호(API KEY)를 설정하세요. Apps Script의 API_KEY와 정확히 같아야 합니다.
     const API_KEY = 'my-secret-password-1234';
 
