@@ -545,27 +545,8 @@
 
     loadLog();
 
-    // ── Sample data ───────────────────────────────
+    // ── Data ──────────────────────────────────────
     let cages = [];
-    ['A', 'B', 'C'].forEach(rack => {
-        for(let i=0; i<35; i++) {
-            let isMating = (i % 3 === 0);
-            cages.push({
-                id: `${rack}_${i}`, rackId: rack, cellIdx: i, type: isMating ? 'mating' : 'breeding',
-                code: rack === 'B' ? 'C' : 'A', subId: isMating ? `${i+1}` : `-${i+1}`, notes: '',
-                dom: isMating ? '2026-05-10' : '', mMale: isMating ? 1 : 0, mGeno: '', mDob: '',
-                mFemale: isMating ? 2 : 0, fGeno: '', fDob: '',
-                gender: isMating ? '' : 'female', bCount: isMating ? 0 : 3, bDob: isMating ? '' : '2026-04-01'
-            });
-        }
-    });
-    for(let i=0; i<8; i++) {
-        cages.push({
-            id: `D_${i}`, rackId: 'D', cellIdx: i, type: 'breeding', code: 'W', subId: `${i+1}`, notes: '',
-            dom: '', mMale: 0, mGeno: '', mDob: '', mFemale: 0, fGeno: '', fDob: '',
-            gender: 'male', bCount: 2, bDob: ''
-        });
-    }
 
     let isBatchMode = false;
     let selectedIds = new Set();
@@ -1303,7 +1284,7 @@
 
     // ── Google Apps Script Sync ───────────────────
     // 구글 시트 배포 후 발급받은 Web App URL을 여기에 입력하세요.
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz9CvAest5r5OWx3f_rM2nyD3Ol2XwPh-piWixYlzxqmW9CECWB_n-aaZO3--WvXf9k/exec'; 
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwv9E0PHDfDOxP3qB2CnxfdlIzgeB5WihiCfMDSwmv52Uecf82ahmUlHALf6o5nkDME/exec'; 
     // 임의의 비밀번호(API KEY)를 설정하세요. Apps Script의 API_KEY와 정확히 같아야 합니다.
     const API_KEY = 'my-secret-password-1234';
 
