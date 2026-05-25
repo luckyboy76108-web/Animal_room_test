@@ -274,6 +274,7 @@
         #log-panel .log-sub { font-size: 12px; color: var(--text-sub); margin-bottom: 20px; }
         #log-list {
             flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;
+            -webkit-user-select: text; user-select: text;
         }
         #log-list::-webkit-scrollbar { width: 5px; }
         #log-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius:3px; }
@@ -283,11 +284,11 @@
         }
         .log-entry .log-time { font-size: 10px; color: var(--text-sub); font-weight: 600; letter-spacing: 0.3px; margin-bottom: 4px; }
         .log-entry .log-action { font-size: 13px; color: white; font-weight: 500; }
-        .log-entry .log-detail { font-size: 11px; color: #a1a1a6; margin-top: 3px; font-family: "SF Mono", monospace; }
-        .log-entry.type-edit .log-action::before { content: '✏️  '; }
-        .log-entry.type-delete .log-action::before { content: '🗑️  '; }
-        .log-entry.type-create .log-action::before { content: '➕  '; }
-        .log-entry.type-move .log-action::before { content: '🚚  '; }
+        .log-entry .log-detail { font-size: 11px; color: #a1a1a6; margin-top: 3px; font-family: "SF Mono", monospace; white-space: pre-wrap; line-height: 1.4; }
+        .log-entry.type-edit .log-action::before { content: '[수정] '; }
+        .log-entry.type-delete .log-action::before { content: '[삭제] '; }
+        .log-entry.type-create .log-action::before { content: '[생성] '; }
+        .log-entry.type-move .log-action::before { content: '[이동] '; }
         .log-empty { color: var(--text-sub); font-size: 13px; text-align: center; margin-top: 40px; }
         .log-panel-footer { margin-top: 16px; display: flex; gap: 10px; }
     </style>
@@ -299,6 +300,7 @@
     <div class="top-right">
         <div class="progress-text">공간 사용률: <span id="occupancy-label">0%</span></div>
         <div class="progress-container"><div class="progress-bar" id="occupancy-bar"></div></div>
+        <button class="header-btn" id="btn-sync" onclick="manualSync()">🔄 동기화</button>
         <button class="header-btn" onclick="openLogPanel()">📋 수정 로그</button>
         <button class="header-btn" id="btn-batch" onclick="toggleBatchMode()">☑️ 일괄 선택</button>
         <button class="header-btn" onclick="openMatchPanel(event)">🧬 Strain 매칭표</button>
@@ -347,6 +349,7 @@
     <div class="log-sub" id="log-sub-count">총 0건의 기록</div>
     <div id="log-list"><div class="log-empty">아직 수정 내역이 없습니다.</div></div>
     <div class="log-panel-footer">
+        <button class="header-btn" style="flex:1; background: rgba(255,255,255,0.1);" onclick="downloadLog()">💾 텍스트 다운로드</button>
         <button class="header-btn" style="flex:1;" onclick="closeLogPanel()">닫기</button>
     </div>
 </div>
@@ -460,7 +463,6 @@
         <div class="modal-btns">
             <button class="btn btn-delete" id="btn-delete" onclick="deleteCage()">삭제</button>
             <button class="btn btn-cancel" onclick="closeModal()">취소</button>
-            <button class="btn btn-log-view" onclick="openLogPanel()">📋 로그</button>
             <button class="btn btn-save" id="btn-save" onclick="saveCage()">적용</button>
         </div>
     </div>
@@ -1207,7 +1209,7 @@
             Object.assign(prev, info);
             logAction('edit',
                 `Cage ${id} edited`,
-                changed.length ? changed.join('  |  ') : 'no field change detected'
+                changed.length ? changed.join('\n') : 'no field change detected'
             );
         } else {
             const newId = 'c_' + Date.now();
@@ -1273,6 +1275,76 @@
         document.getElementById('occupancy-bar').style.width = `${rate}%`;
         updateOverflowUI();
     }
+    // ── Download Log ──────────────────────────────
+    function downloadLog() {
+        if (editLog.length === 0) { alert('다운로드할 로그가 없습니다.'); return; }
+        let textContent = "Smart Rack OS 수정 로그\n==========================\n\n";
+        editLog.forEach(e => {
+            textContent += `[${e.ts}] ${e.action}\n`;
+            if (e.detail) textContent += `내역:\n${e.detail}\n`;
+            textContent += `--------------------------\n`;
+        });
+        const blob = new Blob([textContent], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        const now = new Date();
+        const pad = n => String(n).padStart(2, '0');
+        a.download = `smart_rack_log_${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}.txt`;
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+
+    // ── Google Apps Script Sync ───────────────────
+    // 구글 시트 배포 후 발급받은 Web App URL을 여기에 입력하세요.
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyUAc9__VR9WcX1sqoH-LtsyOJU4IxF9z6nI4i6k9Ei7-vThZxySRrhDLow_gJXA8gM/exec'; 
+
+    async function syncToSheet() {
+        if (!SCRIPT_URL) return;
+        const syncBtn = document.getElementById('btn-sync');
+        try {
+            syncBtn.innerText = '🔄 동기화 중...';
+            const payload = { action: 'save', cages, rackRows: RACK_ROWS, strainMap: STRAIN_MAP };
+            await fetch(SCRIPT_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain' },
+                body: JSON.stringify(payload)
+            });
+            syncBtn.innerText = '✅ 동기화 완료';
+            setTimeout(() => { syncBtn.innerText = '🔄 동기화'; }, 2000);
+        } catch(e) {
+            console.error('Sync failed', e);
+            syncBtn.innerText = '⚠️ 동기화 실패';
+        }
+    }
+
+    async function syncFromSheet() {
+        if (!SCRIPT_URL) return;
+        const syncBtn = document.getElementById('btn-sync');
+        try {
+            syncBtn.innerText = '🔄 불러오는 중...';
+            const res = await fetch(SCRIPT_URL + '?action=load');
+            const data = await res.json();
+            if (data && data.cages) {
+                cages = data.cages;
+                if (data.rackRows) RACK_ROWS = data.rackRows;
+                if (data.strainMap) STRAIN_MAP = data.strainMap;
+                renderMainBoard(); buildLeftSidebar();
+            }
+            syncBtn.innerText = '🔄 동기화';
+        } catch(e) {
+            console.error('Load failed', e);
+            syncBtn.innerText = '⚠️ 불러오기 실패';
+        }
+    }
+
+    function manualSync() {
+        if (!SCRIPT_URL) { alert('Google Apps Script Web App URL이 설정되지 않았습니다.'); return; }
+        syncToSheet();
+    }
+
+    window.addEventListener('load', () => { if (SCRIPT_URL) syncFromSheet(); });
+    window.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden' && SCRIPT_URL) syncToSheet(); });
 
     buildLeftSidebar();
     renderMainBoard();
