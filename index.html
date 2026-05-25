@@ -492,7 +492,17 @@
 <script>
     let RACK_ROWS = { 'A': 5, 'B': 5, 'C': 5, 'D': 3, 'E': 3 };
     let currentRack = 'A';
-    let STRAIN_MAP = { 'A': 'K18-hACE2', 'C': 'Aim2', 'W': 'Wild Type' };
+    let STRAIN_MAP = {
+        'A': 'K18-ACE2', 'AA': 'Nlrp1abc', 'AB': 'Nlrp2', 'AC': 'Nlrp4a', 'AD': 'Nlrp4b',
+        'AE': 'Nlrp5 flox', 'AF': 'Nlrp6', 'AG': 'hNlrp8', 'AH': 'Nlrp9b', 'AHH': 'Nlrp3*K18 dKO',
+        'AI': 'hNlrp11', 'AJ': 'hNlrp13', 'AK': 'Nlrp14', 'AL': 'Nlrx1', 'AN': 'cGAS',
+        'AO': 'Rigi', 'AP': 'Ifih1', 'AQ': 'NOD1', 'AR': 'NOD2', 'AS': 'JunD',
+        'AT': 'CD163', 'AU': 'Nlrc5', 'C': 'AIM2', 'D': 'Casp1', 'F': 'IFnar1',
+        'FM': 'IFnar1*IFngr1 dKO', 'G': 'WT', 'H': 'Nlrp3', 'I': 'Nlrp12', 'J': 'Mefv',
+        'K': 'ZBP1', 'KRKR': 'ZBP1*K18 dKO', 'L': 'IFnlr1', 'M': 'IFngr1', 'N': 'Nlrc4',
+        'P': 'IL-10', 'PS': 'IL-10*K18 dKO', 'Q': 'Nlrp10', 'QIQI': 'Nlrp12*K18 dKO', 'QK': 'Nlrp10*ZBP1',
+        'R': 'Nlrc3', 'U': 'LysMCre'
+    };
 
     // ── Edit log (localStorage 영구 저장) ────────
     const LOG_KEY = 'smartRackEditLog';
@@ -1293,7 +1303,7 @@
         const syncBtn = document.getElementById('btn-sync');
         try {
             syncBtn.innerText = '🔄 동기화 중...';
-            const payload = { key: API_KEY, action: 'save', cages, rackRows: RACK_ROWS, strainMap: STRAIN_MAP };
+            const payload = { key: API_KEY, action: 'save', cages, rackRows: RACK_ROWS, strainMap: STRAIN_MAP, logs: editLog };
             await fetch(SCRIPT_URL, {
                 method: 'POST',
                 mode: 'no-cors', // CORS 리다이렉트 에러 방지 (불투명 응답 처리)
@@ -1319,9 +1329,14 @@
             });
             const data = await res.json();
             if (data && data.cages) {
-                cages = data.cages;
+                if (data.cages) cages = data.cages;
                 if (data.rackRows) RACK_ROWS = data.rackRows;
                 if (data.strainMap) STRAIN_MAP = data.strainMap;
+                if (data.logs) {
+                    editLog = data.logs;
+                    localStorage.setItem(LOG_KEY, JSON.stringify(editLog));
+                    refreshLogPanel();
+                }
                 renderMainBoard(); buildLeftSidebar();
             }
             syncBtn.innerText = '🔄 동기화';
