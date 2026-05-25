@@ -30,7 +30,7 @@
         }
         header h1 { margin: 0; font-size: 24px; font-weight: 700; background: linear-gradient(90deg, #fff, #a1a1a6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         
-        .top-right { display: flex; align-items: center; gap: 20px; }
+        .top-right { display: flex; align-items: center; gap: 8px; }
         .progress-container { width: 180px; background: rgba(255,255,255,0.1); height: 10px; border-radius: 5px; overflow: hidden; }
         .progress-bar { height: 100%; background: linear-gradient(90deg, #ff9500, #ffcc00); width: 0%; transition: width 0.3s; }
         .progress-text { font-size: 13px; color: var(--text-sub); font-weight: 600; white-space: nowrap; }
@@ -329,7 +329,7 @@
         <div class="progress-text">공간 사용률: <span id="occupancy-label">0%</span></div>
         <div class="progress-container"><div class="progress-bar" id="occupancy-bar"></div></div>
         <button class="header-btn" id="btn-sync" onclick="manualSync()">🔄 동기화</button>
-        <button class="header-btn" onclick="openLogPanel()">📋 수정 로그</button>
+        <button class="header-btn" onclick="openLogPanel()">📋 로그</button>
         <button class="header-btn" id="btn-batch" onclick="toggleBatchMode()">☑️ 일괄 선택</button>
         
         <button class="header-btn" onclick="openDayPanel()">📅 요일 배정</button>
@@ -402,17 +402,17 @@
     <div class="config-box" style="margin-bottom:20px;">
         <div style="font-size:13px; font-weight:bold; margin-bottom:10px; color:#ffcc00;">WT (G) 요일 배정 예외 범위</div>
         <div class="config-row" style="justify-content: flex-start; gap: 10px;">
-            <span style="color:#0a84ff;font-weight:bold;width:40px;">월요일:</span>
+            <span style="color:#0a84ff;font-weight:bold;min-width:55px; white-space:nowrap;">월요일:</span>
             G <input type="number" id="wt-mon-min" class="config-input"> ~ 
             G <input type="number" id="wt-mon-max" class="config-input">
         </div>
         <div class="config-row" style="justify-content: flex-start; gap: 10px;">
-            <span style="color:#FF375F;font-weight:bold;width:40px;">화요일:</span>
+            <span style="color:#FF375F;font-weight:bold;min-width:55px; white-space:nowrap;">화요일:</span>
             G <input type="number" id="wt-tue-min" class="config-input"> ~ 
             G <input type="number" id="wt-tue-max" class="config-input">
         </div>
         <div class="config-row" style="justify-content: flex-start; gap: 10px;">
-            <span style="color:#34c759;font-weight:bold;width:40px;">수요일:</span>
+            <span style="color:#34c759;font-weight:bold;min-width:55px; white-space:nowrap;">수요일:</span>
             G <input type="number" id="wt-wed-min" class="config-input"> ~ 
             G <input type="number" id="wt-wed-max" class="config-input">
         </div>
@@ -587,7 +587,8 @@
         'FM': { name: 'IFnar1*IFngr1 dKO', g_done: false }, 'PS': { name: 'IL-10*K18 dKO', g_done: false }, 
         'QK': { name: 'Nlrp10*ZBP1', g_done: false },
         'AHH': { name: 'Nlrp3*K18 dKO', g_done: false },
-        'KRKR': { name: 'ZBP1*K18 dKO', g_done: false }, 'IHIH': { name: 'Nlrp3*Nlrp12 dKO', g_done: true },
+        'IHIH': { name: 'Nlrp3*Nlrp12 dKO', g_done: true },
+        'KRKR': { name: 'ZBP1*K18 dKO', g_done: false }, 
         'QIQI': { name: 'Nlrp12*K18 dKO', g_done: false }        
     };
 
