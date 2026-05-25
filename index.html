@@ -644,8 +644,12 @@
 
     // ── Data ──────────────────────────────────────
     
-    let dayMap = {};
-    let wtRanges = { 'Mon': {min:'', max:''}, 'Tue': {min:'', max:''}, 'Wed': {min:'', max:''} };
+    let dayMap = {
+        'A': 'Mon', 'C': 'Mon', 'H': 'Mon', 'K': 'Mon', 'N': 'Mon', 'R': 'Mon', 'U': 'Mon', 'AF': 'Mon', 'AI': 'Mon', 'AO': 'Mon', 'AQ': 'Mon', 'AU': 'Mon', 'AH': 'Mon', 'AHH': 'Mon', 'IHIH': 'Mon',
+        'D': 'Tue', 'I': 'Tue', 'L': 'Tue', 'P': 'Tue', 'AA': 'Tue', 'AB': 'Tue', 'AK': 'Tue', 'AG': 'Tue', 'AJ': 'Tue', 'AP': 'Tue', 'AS': 'Tue', 'QIQI': 'Tue', 'FM': 'Tue', 'PS': 'Tue',
+        'F': 'Wed', 'J': 'Wed', 'M': 'Wed', 'Q': 'Wed', 'AC': 'Wed', 'AN': 'Wed', 'AD': 'Wed', 'AE': 'Wed', 'AL': 'Wed', 'AR': 'Wed', 'AT': 'Wed', 'KRKR': 'Wed', 'QK': 'Wed'
+    };
+    let wtRanges = { 'Mon': {min:'', max:''}, 'Tue': {min:'1', max:'10'}, 'Wed': {min:'11', max:'20'} }; // 초기 예시값 (화, 수 절반)
 
     function clearLogsSite() {
         if(confirm('모든 수정 로그를 삭제하시겠습니까?\n서버(구글 시트)에도 빈 로그로 즉시 덮어씌워집니다.')) {
@@ -658,12 +662,13 @@
 
     // Day Assignment Logic
     function getCageDay(cage) {
-        if (cage.type !== 'mating') return null;
         if (cage.code === 'G') {
+            if (cage.type === 'breeding') return 'Mon';
             const sub = parseInt(cage.subId) || 0;
             if (sub >= parseInt(wtRanges['Mon'].min||9999) && sub <= parseInt(wtRanges['Mon'].max||-1)) return 'Mon';
             if (sub >= parseInt(wtRanges['Tue'].min||9999) && sub <= parseInt(wtRanges['Tue'].max||-1)) return 'Tue';
             if (sub >= parseInt(wtRanges['Wed'].min||9999) && sub <= parseInt(wtRanges['Wed'].max||-1)) return 'Wed';
+            return null;
         }
         return dayMap[cage.code] || null;
     }
@@ -1446,6 +1451,7 @@ document.addEventListener('pointerdown', (e) => {
     function addStrainRow() { document.getElementById('mapping-list').appendChild(createStrainRow('', '', false)); }
 
     function saveAndCloseMatchPanel() {
+        if (!document.getElementById('match-panel').classList.contains('open')) return;
         const tempMap = {};
         document.querySelectorAll('.match-row').forEach(row => {
             const k = row.querySelector('.match-key-input').value.trim().toUpperCase();
@@ -1496,7 +1502,7 @@ document.addEventListener('pointerdown', (e) => {
 
     // ── Google Apps Script Sync ───────────────────
     // 구글 시트 배포 후 발급받은 Web App URL을 여기에 입력하세요.
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzQOHff_moYN7iPMRUbvQ9nW8BEiU7xVy4N7diGVj0LAhtskmnFF4aFWQHZdLcdyoRR/exec'; 
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzcRs_z2mZSyayO0r6G5BZbZxLlB-Hhb7HshY2Us-sYYCuTb5ikHsryxMnmWpkjpEhX/exec'; 
     // 임의의 비밀번호(API KEY)를 설정하세요. Apps Script의 API_KEY와 정확히 같아야 합니다.
     const API_KEY = 'my-secret-password-1234';
 
@@ -1534,8 +1540,8 @@ document.addEventListener('pointerdown', (e) => {
                 if (data.cages) cages = data.cages;
                 if (data.rackRows) RACK_ROWS = data.rackRows;
                 // STRAIN_MAP는 HTML 내부 하드코딩된 값을 절대적 기준으로 사용 (구글 시트에서 불러오지 않음)
-                if (data.dayMap) dayMap = data.dayMap;
-                if (data.wtRanges) wtRanges = data.wtRanges;
+                if (data.dayMap && Object.keys(data.dayMap).length > 0) dayMap = data.dayMap;
+                if (data.wtRanges && Object.keys(data.wtRanges).length > 0) wtRanges = data.wtRanges;
                 if (data.logs) {
                     editLog = data.logs;
                     localStorage.setItem(LOG_KEY, JSON.stringify(editLog));
