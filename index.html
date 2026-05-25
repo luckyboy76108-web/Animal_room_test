@@ -290,7 +290,35 @@
         .log-entry.type-create .log-action::before { content: '[생성] '; }
         .log-entry.type-move .log-action::before { content: '[이동] '; }
         .log-empty { color: var(--text-sub); font-size: 13px; text-align: center; margin-top: 40px; }
+        
+        .log-empty { color: var(--text-sub); font-size: 13px; text-align: center; margin-top: 40px; }
         .log-panel-footer { margin-top: 16px; display: flex; gap: 10px; }
+
+        /* ─── Day Panel ─── */
+        #day-panel {
+            position: fixed; top: 0; right: -600px; width: 560px; height: 100vh;
+            background: rgba(25, 25, 30, 0.95); backdrop-filter: blur(40px); border-left: 1px solid var(--glass-border);
+            z-index: 1500; padding: 40px 28px; box-shadow: -20px 0 40px rgba(0,0,0,0.5);
+            transition: right 0.3s cubic-bezier(0.16, 1, 0.3, 1); box-sizing: border-box; display: flex; flex-direction: column;
+        }
+        #day-panel.open { right: 0; }
+        .day-columns { display: flex; gap: 10px; flex: 1; min-height: 200px; margin-bottom: 20px; }
+        .day-col { flex: 1; background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border); border-radius: 12px; padding: 10px; display: flex; flex-direction: column; }
+        .day-col-title { font-size: 14px; font-weight: 700; text-align: center; margin-bottom: 10px; padding-bottom: 5px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .day-list { flex: 1; min-height: 100px; overflow-y: auto; padding-bottom: 10px; }
+        .strain-item { background: rgba(255,255,255,0.1); padding: 8px; margin-bottom: 6px; border-radius: 8px; font-size: 13px; cursor: grab; font-weight: 600; display: flex; justify-content: space-between; }
+        .strain-item:active { cursor: grabbing; }
+
+        /* Day Badge */
+        .day-badge {
+            position: absolute; top: -6px; right: -6px; width: 22px; height: 22px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 800; color: white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.5); z-index: 20; border: 2px solid #1c1c1e;
+        }
+        .day-badge.Mon { background: #0a84ff; }
+        .day-badge.Tue { background: #FF375F; }
+        .day-badge.Wed { background: #34c759; }
+
     </style>
 </head>
 <body>
@@ -303,7 +331,10 @@
         <button class="header-btn" id="btn-sync" onclick="manualSync()">🔄 동기화</button>
         <button class="header-btn" onclick="openLogPanel()">📋 수정 로그</button>
         <button class="header-btn" id="btn-batch" onclick="toggleBatchMode()">☑️ 일괄 선택</button>
+        
+        <button class="header-btn" onclick="openDayPanel()">📅 요일 배정</button>
         <button class="header-btn" onclick="openMatchPanel(event)">🧬 Strain 매칭표</button>
+
     </div>
 </header>
 
@@ -343,16 +374,63 @@
     <button class="header-btn" style="width:100%;background:#ffcc00;color:#1c1c1e;" onclick="saveAndCloseMatchPanel()">설정 완료</button>
 </div>
 
+
+<!-- Day panel -->
+<div id="day-panel">
+    <h2>📅 Mating 요일 배정 (월/화/수)</h2>
+    <p style="font-size:12px; color:var(--text-sub); margin-bottom:15px;">Strain 항목을 드래그하여 각 요일에 배치하세요.</p>
+    
+    <div class="day-columns">
+        <div class="day-col">
+            <div class="day-col-title" style="color:#0a84ff;">월요일</div>
+            <div class="day-list" id="day-list-Mon" data-day="Mon"></div>
+        </div>
+        <div class="day-col">
+            <div class="day-col-title" style="color:#FF375F;">화요일</div>
+            <div class="day-list" id="day-list-Tue" data-day="Tue"></div>
+        </div>
+        <div class="day-col">
+            <div class="day-col-title" style="color:#34c759;">수요일</div>
+            <div class="day-list" id="day-list-Wed" data-day="Wed"></div>
+        </div>
+        <div class="day-col">
+            <div class="day-col-title" style="color:#8e8e93;">미배정</div>
+            <div class="day-list" id="day-list-None" data-day="None"></div>
+        </div>
+    </div>
+
+    <div class="config-box" style="margin-bottom:20px;">
+        <div style="font-size:13px; font-weight:bold; margin-bottom:10px; color:#ffcc00;">WT (G) 요일 배정 예외 범위</div>
+        <div class="config-row" style="justify-content: flex-start; gap: 10px;">
+            <span style="color:#0a84ff;font-weight:bold;width:40px;">월요일:</span>
+            G <input type="number" id="wt-mon-min" class="config-input"> ~ 
+            G <input type="number" id="wt-mon-max" class="config-input">
+        </div>
+        <div class="config-row" style="justify-content: flex-start; gap: 10px;">
+            <span style="color:#FF375F;font-weight:bold;width:40px;">화요일:</span>
+            G <input type="number" id="wt-tue-min" class="config-input"> ~ 
+            G <input type="number" id="wt-tue-max" class="config-input">
+        </div>
+        <div class="config-row" style="justify-content: flex-start; gap: 10px;">
+            <span style="color:#34c759;font-weight:bold;width:40px;">수요일:</span>
+            G <input type="number" id="wt-wed-min" class="config-input"> ~ 
+            G <input type="number" id="wt-wed-max" class="config-input">
+        </div>
+    </div>
+
+    <button class="header-btn" style="width:100%;background:#ffcc00;color:#1c1c1e;" onclick="saveAndCloseDayPanel()">저장 및 닫기</button>
+</div>
+
 <!-- Edit Log Panel -->
+
 <div id="log-panel">
     <h2>📋 수정 로그</h2>
     <div class="log-sub" id="log-sub-count">총 0건의 기록</div>
-    <div id="log-list"><div class="log-empty">아직 수정 내역이 없습니다.</div></div>
-    <div class="log-panel-footer">
+    <div id="log-list"><div class="log-empty">아직 수정 내역이 없습니다.</div></div><div class="log-panel-footer">
+        <button class="header-btn" style="flex:1; background: rgba(255,55,95,0.2); color:#FF375F; border-color:#FF375F;" onclick="clearLogsSite()">🗑️ 전체 기록 초기화</button>
         <button class="header-btn" style="flex:1; background: rgba(255,255,255,0.1);" onclick="downloadLog()">💾 텍스트 다운로드</button>
         <button class="header-btn" style="flex:1;" onclick="closeLogPanel()">닫기</button>
-    </div>
-</div>
+    </div></div>
 
 <!-- Cage modal -->
 <div class="modal-overlay" id="modal">
@@ -565,7 +643,88 @@
     loadLog();
 
     // ── Data ──────────────────────────────────────
+    
+    let dayMap = {};
+    let wtRanges = { 'Mon': {min:'', max:''}, 'Tue': {min:'', max:''}, 'Wed': {min:'', max:''} };
+
+    function clearLogsSite() {
+        if(confirm('모든 수정 로그를 삭제하시겠습니까?\n서버(구글 시트)에도 빈 로그로 즉시 덮어씌워집니다.')) {
+            editLog = [];
+            saveLog();
+            refreshLogPanel();
+            syncToSheet();
+        }
+    }
+
+    // Day Assignment Logic
+    function getCageDay(cage) {
+        if (cage.type !== 'mating') return null;
+        if (cage.code === 'G') {
+            const sub = parseInt(cage.subId) || 0;
+            if (sub >= parseInt(wtRanges['Mon'].min||9999) && sub <= parseInt(wtRanges['Mon'].max||-1)) return 'Mon';
+            if (sub >= parseInt(wtRanges['Tue'].min||9999) && sub <= parseInt(wtRanges['Tue'].max||-1)) return 'Tue';
+            if (sub >= parseInt(wtRanges['Wed'].min||9999) && sub <= parseInt(wtRanges['Wed'].max||-1)) return 'Wed';
+        }
+        return dayMap[cage.code] || null;
+    }
+
+    function renderDayPanel() {
+        ['Mon','Tue','Wed','None'].forEach(d => document.getElementById('day-list-'+d).innerHTML = '');
+        Object.keys(STRAIN_MAP).forEach(k => {
+            const day = dayMap[k] || 'None';
+            const list = document.getElementById('day-list-'+day);
+            if(list) {
+                const el = document.createElement('div');
+                el.className = 'strain-item';
+                el.draggable = true;
+                el.innerText = `${k} (${STRAIN_MAP[k].name})`;
+                el.dataset.code = k;
+                el.ondragstart = (e) => e.dataTransfer.setData('text/plain', k);
+                list.appendChild(el);
+            }
+        });
+        
+        ['Mon','Tue','Wed'].forEach(d => {
+            document.getElementById(`wt-${d.toLowerCase()}-min`).value = wtRanges[d].min;
+            document.getElementById(`wt-${d.toLowerCase()}-max`).value = wtRanges[d].max;
+        });
+        setupDayDragDrop();
+    }
+
+    function setupDayDragDrop() {
+        document.querySelectorAll('.day-list').forEach(list => {
+            list.ondragover = (e) => { e.preventDefault(); list.style.background = 'rgba(255,255,255,0.05)'; };
+            list.ondragleave = (e) => { list.style.background = ''; };
+            list.ondrop = (e) => {
+                e.preventDefault();
+                list.style.background = '';
+                const code = e.dataTransfer.getData('text/plain');
+                const day = list.dataset.day;
+                if(day === 'None') delete dayMap[code];
+                else dayMap[code] = day;
+                renderDayPanel();
+            };
+        });
+    }
+
+    function openDayPanel() {
+        closeModal(); closeLogPanel(); saveAndCloseMatchPanel();
+        renderDayPanel();
+        document.getElementById('day-panel').classList.add('open');
+    }
+
+    function saveAndCloseDayPanel() {
+        ['Mon','Tue','Wed'].forEach(d => {
+            wtRanges[d].min = document.getElementById(`wt-${d.toLowerCase()}-min`).value;
+            wtRanges[d].max = document.getElementById(`wt-${d.toLowerCase()}-max`).value;
+        });
+        document.getElementById('day-panel').classList.remove('open');
+        renderMainBoard();
+        syncToSheet();
+    }
+
     let cages = [];
+
 
     let isBatchMode = false;
     let selectedIds = new Set();
@@ -576,7 +735,7 @@
     let overflowRackQueue = [];
 
     // ── Global pointer down (marquee + panel close) ──
-    document.addEventListener('pointerdown', (e) => {
+document.addEventListener('pointerdown', (e) => {
         // Log panel close
         const logP = document.getElementById('log-panel');
         if (logP.classList.contains('open') && !logP.contains(e.target) && !e.target.closest('header')) {
@@ -586,6 +745,11 @@
         const matchPanel = document.getElementById('match-panel');
         if (matchPanel.classList.contains('open') && !matchPanel.contains(e.target) && !e.target.closest('header')) {
             saveAndCloseMatchPanel(); return;
+        }
+        // Day panel close
+        const dayPanel = document.getElementById('day-panel');
+        if (dayPanel && dayPanel.classList.contains('open') && !dayPanel.contains(e.target) && !e.target.closest('header')) {
+            saveAndCloseDayPanel(); return;
         }
 
         if (!isBatchMode) return;
@@ -1046,15 +1210,27 @@
             if (dragIds.includes(cage.id)) return;
             let el = document.getElementById(cage.id);
             const displaySub = cage.subId || '';
-            const html = cage.type === 'mating'
+            let contentHtml = cage.type === 'mating'
                 ? `<span class="strain-code" style="font-size:24px;letter-spacing:-1px;">${cage.code}${displaySub}</span>`
                 : `<span class="strain-code">${cage.code}</span>` + (displaySub ? `<span class="sub-id">${displaySub}</span>` : '');
 
+            // ── Day Badge Logic ──
+            let dayBadgeHtml = '';
+            const day = getCageDay(cage);
+            if (day) {
+                const label = day === 'Mon' ? '월' : day === 'Tue' ? '화' : '수';
+                dayBadgeHtml = `<div class="day-badge ${day}">${label}</div>`;
+            }
+            // ── Notes Icon Logic ──
+            const noteHtml = cage.notes ? `<div style="position:absolute; bottom:6px; font-size:16px; pointer-events:none;">${(cage.notes.includes('G완')||cage.notes.includes('G전')) ? '⭐' : '📝'}</div>` : '';
+            
+            contentHtml = dayBadgeHtml + contentHtml + noteHtml;
+
             if (!el) {
                 el = document.createElement('div'); el.id = cage.id; el.className = `cage ${cage.type}`;
-                el.innerHTML = html; setupDragEngine(el, cage.id); grid.appendChild(el);
+                el.innerHTML = contentHtml; setupDragEngine(el, cage.id); grid.appendChild(el);
             } else {
-                el.className = `cage ${cage.type}`; el.innerHTML = html;
+                el.className = `cage ${cage.type}`; el.innerHTML = contentHtml;
             }
 
             if (selectedIds.has(cage.id)) el.classList.add('selected'); else el.classList.remove('selected');
@@ -1320,7 +1496,7 @@
 
     // ── Google Apps Script Sync ───────────────────
     // 구글 시트 배포 후 발급받은 Web App URL을 여기에 입력하세요.
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyBMP5UX4piNcCcREbd1NJQ46irgH2US1eUjSvpyHwXgzAk6MLtKhDBqy8JqMrLUeDN/exec'; 
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzQOHff_moYN7iPMRUbvQ9nW8BEiU7xVy4N7diGVj0LAhtskmnFF4aFWQHZdLcdyoRR/exec'; 
     // 임의의 비밀번호(API KEY)를 설정하세요. Apps Script의 API_KEY와 정확히 같아야 합니다.
     const API_KEY = 'my-secret-password-1234';
 
@@ -1329,7 +1505,7 @@
         const syncBtn = document.getElementById('btn-sync');
         try {
             syncBtn.innerText = '🔄 동기화 중...';
-            const payload = { key: API_KEY, action: 'save', cages, rackRows: RACK_ROWS, strainMap: STRAIN_MAP, logs: editLog };
+            const payload = { key: API_KEY, action: 'save', cages, rackRows: RACK_ROWS, strainMap: STRAIN_MAP, logs: editLog, dayMap: dayMap, wtRanges: wtRanges };
             await fetch(SCRIPT_URL, {
                 method: 'POST',
                 mode: 'no-cors', // CORS 리다이렉트 에러 방지 (불투명 응답 처리)
@@ -1358,6 +1534,8 @@
                 if (data.cages) cages = data.cages;
                 if (data.rackRows) RACK_ROWS = data.rackRows;
                 // STRAIN_MAP는 HTML 내부 하드코딩된 값을 절대적 기준으로 사용 (구글 시트에서 불러오지 않음)
+                if (data.dayMap) dayMap = data.dayMap;
+                if (data.wtRanges) wtRanges = data.wtRanges;
                 if (data.logs) {
                     editLog = data.logs;
                     localStorage.setItem(LOG_KEY, JSON.stringify(editLog));
