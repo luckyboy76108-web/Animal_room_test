@@ -1297,19 +1297,23 @@
 
     // ── Google Apps Script Sync ───────────────────
     // 구글 시트 배포 후 발급받은 Web App URL을 여기에 입력하세요.
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyUAc9__VR9WcX1sqoH-LtsyOJU4IxF9z6nI4i6k9Ei7-vThZxySRrhDLow_gJXA8gM/exec'; 
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyU0sk6t6M9EJcc4SLpjOyz35WznogmjqijT_lMxely9PaNs7DBLQ5rCSolpdXTzzbu/exec'; 
+    // 임의의 비밀번호(API KEY)를 설정하세요. Apps Script의 API_KEY와 정확히 같아야 합니다.
+    const API_KEY = 'my-secret-password-1234';
 
     async function syncToSheet() {
         if (!SCRIPT_URL) return;
         const syncBtn = document.getElementById('btn-sync');
         try {
             syncBtn.innerText = '🔄 동기화 중...';
-            const payload = { action: 'save', cages, rackRows: RACK_ROWS, strainMap: STRAIN_MAP };
+            const payload = { key: API_KEY, action: 'save', cages, rackRows: RACK_ROWS, strainMap: STRAIN_MAP };
             await fetch(SCRIPT_URL, {
                 method: 'POST',
+                mode: 'no-cors', // CORS 리다이렉트 에러 방지 (불투명 응답 처리)
                 headers: { 'Content-Type': 'text/plain' },
                 body: JSON.stringify(payload)
             });
+            // no-cors 모드에서는 응답을 읽을 수 없으므로 성공으로 간주합니다.
             syncBtn.innerText = '✅ 동기화 완료';
             setTimeout(() => { syncBtn.innerText = '🔄 동기화'; }, 2000);
         } catch(e) {
@@ -1323,7 +1327,9 @@
         const syncBtn = document.getElementById('btn-sync');
         try {
             syncBtn.innerText = '🔄 불러오는 중...';
-            const res = await fetch(SCRIPT_URL + '?action=load');
+            const res = await fetch(SCRIPT_URL + '?action=load&key=' + API_KEY, {
+                redirect: 'follow'
+            });
             const data = await res.json();
             if (data && data.cages) {
                 cages = data.cages;
